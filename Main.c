@@ -1,8 +1,8 @@
-#pragma config(I2C_Usage, I2C1, i2cSensors)
 #pragma config(Sensor, dgtl1,  leftEncoder,    sensorQuadEncoder)
 #pragma config(Sensor, dgtl3,  rightEncoder,   sensorQuadEncoder)
 #pragma config(Sensor, dgtl5,  armBump,        sensorDigitalIn)
-#pragma config(Sensor, I2C_1,  armEncoder,     sensorQuadEncoderOnI2CPort,    , AutoAssign )
+#pragma config(Sensor, dgtl6,  clawSolenoid,   sensorDigitalOut)
+#pragma config(Sensor, I2C_1,  armEncoder,     sensorNone)
 #pragma config(Motor,  port1,           A1,            tmotorVex393HighSpeed_HBridge, openLoop)
 #pragma config(Motor,  port2,           A2,            tmotorVex393HighSpeed_MC29, openLoop)
 #pragma config(Motor,  port3,           A3,            tmotorVex393HighSpeed_MC29, openLoop)
@@ -27,7 +27,8 @@
 #define inToMm 25.4 //Conversion factor for autonomous PID movement.
 
 /* GLOBAL VARIABLES */
-
+int armLimit = 1300;
+int dumpHeight = 1000;
 
 
 // This code is for the VEX cortex platform
@@ -39,9 +40,13 @@
 
 //INCLUDES
 #include "Vex_Competition_Includes.c" //Main competition background code...do not modify!
+#include "Claw.c" //All control code for the claw.
 #include "Drive.c" //Basic drive functions.
 #include "Arm.c" //Basic arm functions.
+#include "DrivePID.c" //Drive PID movement functions.
 #include "ArmPID.c" //Arm PID movement functions.
+#include "DriveUserControl.c" //User control code for the drive.
+#include "ArmUserControl.c" //User control code for the arm.
 
 /*---------------------------------------------------------------------------*/
 /*                          Pre-Autonomous Functions                         */
@@ -55,14 +60,14 @@
 
 void pre_auton()
 {
-  // Set bStopTasksBetweenModes to false if you want to keep user created tasks
-  // running between Autonomous and Driver controlled modes. You will need to
-  // manage all user created tasks if set to false.
-  bStopTasksBetweenModes = true;
+	// Set bStopTasksBetweenModes to false if you want to keep user created tasks
+	// running between Autonomous and Driver controlled modes. You will need to
+	// manage all user created tasks if set to false.
+	bStopTasksBetweenModes = true;
 
-  //Set drive encoder values to zero.
-  SensorValue(leftEncoder) = 0;
-  SensorValue(rightEncoder) = 0;
+	//Set drive encoder values to zero.
+	SensorValue(leftEncoder) = 0;
+	SensorValue(rightEncoder) = 0;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -77,9 +82,9 @@ void pre_auton()
 
 task autonomous()
 {
-  // ..........................................................................
-  // Insert user code here.
-  // ..........................................................................
+	// ..........................................................................
+	// Insert user code here.
+	// ..........................................................................
 }
 
 /*---------------------------------------------------------------------------*/
@@ -94,10 +99,20 @@ task autonomous()
 
 task usercontrol()
 {
-  // User control code here, inside the loop
+	//Init arm PID task:
+	startTask(armPIDController);
+	armPIDRunning = false;
 
-  while (true)
-  {
+	while (true)
+	{
+		/*User drive method*/
+		tankDrive();
+		//arcadeDrive();
 
-  }
+		/*User claw control method*/
+		UserClaw();
+
+		/*User arm control method*/
+		userArm();
+	}
 }
