@@ -23,11 +23,11 @@ void closeClaw(){
 }
 
 //User control program for the claw.
-void UserClaw(){
-	if(vexRT(Btn6U)){
+void userClaw(){
+	if(vexRT(Btn8U)){
 		closeClaw();
 	}
-	if(vexRT(Btn5U)){
+	if(vexRT(Btn8D)){
 		openClaw();
 	}
 }
