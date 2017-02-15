@@ -14,6 +14,7 @@ float kP_arm = 0.625, kI_arm = 0, kD_arm = 0;
 //Moves the arm at the given voltage.
 void setArm(int voltage){
 	motor(A1) = motor(A2) = motor(A3) = motor(A4) = voltage;
+	//motor(A4) = voltage;
 }
 
 void pidArm(int armSetpoint) {

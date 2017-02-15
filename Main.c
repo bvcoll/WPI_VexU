@@ -1,7 +1,8 @@
 #pragma config(I2C_Usage, I2C1, i2cSensors)
 #pragma config(Sensor, dgtl1,  leftEncoder,    sensorQuadEncoder)
 #pragma config(Sensor, dgtl3,  rightEncoder,   sensorQuadEncoder)
-#pragma config(Sensor, dgtl5,  armBump,        sensorTouch)
+#pragma config(Sensor, dgtl5,  armBottomLimit, sensorTouch)
+#pragma config(Sensor, dgtl6,  armTopLimit,    sensorTouch)
 #pragma config(Sensor, dgtl12, clawSolenoid,   sensorDigitalOut)
 #pragma config(Sensor, I2C_1,  ,               sensorQuadEncoderOnI2CPort,    , AutoAssign )
 #pragma config(Motor,  port1,           RD1,           tmotorVex393TurboSpeed_HBridge, openLoop, driveRight)
@@ -28,16 +29,17 @@
 #define inToMm 25.4 //Conversion factor for autonomous PID movement.
 
 /* GLOBAL VARIABLES */
-int middleArmSetpoint = 100; //Setpoint to hold at for driving around the field
+int middleArmSetpoint = 150; //Setpoint to hold at for driving around the field
 int scoreThreshold = 300;  //Point at which to open the claw
 int topArmSetpoint = 700;  //Setpoint for dumping
-bool armFlag = false;      //flag to see if the arm has already zeroed
+
 
 /* USER CONTROL ROBOT STATES */
 #define BOTTOM 0
 #define HOLDING 1
 #define DUMPING 2
-int robotState = BOTTOM;
+#define RESET 3
+
 
 
 
@@ -50,7 +52,10 @@ int robotState = BOTTOM;
 
 //Include PID libraries
 #define BCI_USE_POS_PID
+#define BCI_USE_ODOMETRY
 #include "BCI.h"
+
+
 
 //INCLUDES
 #include "Vex_Competition_Includes.c" //Main competition background code...do not modify!
@@ -60,6 +65,7 @@ int robotState = BOTTOM;
 #include "DrivePID.c" //Drive PID movement functions.
 #include "DriveUserControl.c" //User control code for the drive.
 #include "ArmUserControl.c" //User control code for the arm.
+#include "ArmClawController.c"
 
 
 
@@ -80,9 +86,6 @@ void pre_auton()
 	// manage all user created tasks if set to false.
 	bStopTasksBetweenModes = true;
 
-	//Set drive encoder values to zero.
-	SensorValue(leftEncoder) = 0;
-	SensorValue(rightEncoder) = 0;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -112,89 +115,43 @@ task autonomous()
 /*  You must modify the code to add your own robot specific commands here.   */
 /*---------------------------------------------------------------------------*/
 
+
 task usercontrol()
 {
+	//Initialize odometry to run off of our left and right quadrature encoders
+	//and assume we start at exactly position (0,0) and rotation 0
+	odom_Initialize(leftEncoder, rightEncoder, 0, 0, 0);
+
+	//Guess the scales for our robot. Our wheel base is 17.5 inches and we are
+	//using 4 inch omni wheels. Note: This will never be as good as determining
+	//thse numbers yourself experimentally and calling odometry_SetScales instead
+	odom_SetScales(0.7315, 0.22687);
+
+	//Start the odometry task. From this point onward, we are not allowed to
+	//modify the values of the quadrature encoders we passed in earlier
+	//startTask(trackOdometry);
+	startTask(ArmClawController);
+
 	while (true)
 	{
 
 		/*User drive method*/
 		arcadeDrive();
 
-		/*Arm encoder reset*/
-		if(SensorValue(armBump) == 1 && !armFlag){ //Arm at bottom
-			//Reset arm encoder and set flag to true so it won't reset again
-			SensorValue(I2C_1) = 0;
-			armFlag = true;
-		}
 
 		/*User state changes*/
-		if (vexRT(Btn8R)) {
-			robotState = BOTTOM;
+		if (vexRT(Btn7D)) {
+			armTask_ArmState = ARM_RESET;
+		}
+		if (vexRT(Btn7L) || vexRT(Btn7R)) {
+			armTask_ArmState = ARM_USER;
 		}
 		if(vexRT(Btn6D)) {
-			robotState = HOLDING;
+			armTask_ArmState = ARM_HOLDING;
 		}
 		if (vexRT(Btn6U)) {
-			robotState = DUMPING;
+			armTask_ArmState = ARM_DUMPING;
 		}
-
-		/*Claw/arm state machine*/
-		switch(robotState) {
-
-
-		case BOTTOM:  /*Arm at bottom ----------------------------------------------------------*/
-
-			//arm control
-			if (vexRT(Btn5U)){  //Manual up
-				setArm(127);
-			}
-			else if (vexRT(Btn5D)){ //Manual down and reset encoder
-				setArm(-75);
-				SensorValue(I2C_1) = 0;
-			}
-			else if (SensorValue(armBump) == 0) { //PID down until button hit
-				pidArm(0);
-			}
-			else {  //If button is hit turn off arm motors
-				setArm(0);
-			}
-
-			//Claw control
-			userClaw();
-
-			break;
-
-
-		case HOLDING:  /*Arm holding above ground ----------------------------------------------*/
-			pidArm(middleArmSetpoint);
-			closeClaw();
-
-			break;
-
-
-		case DUMPING:  /*Arm Dumping ------------------------------------------------------------*/
-
-			//PID to top setpoint
-			pidArm(topArmSetpoint);
-
-			//open the claw once above the scoring threshold
-			if (SensorValue(I2C_1) < scoreThreshold) {
-				closeClaw();
-			}
-			else {
-				openClaw();
-			}
-
-			//Change robot state to bottom once near top setpoint
-			if (SensorValue(I2C_1) >= topArmSetpoint - 25) {
-				robotState = BOTTOM;
-			}
-
-			break;
-		}
-
-
-
 
 	}
 }

@@ -4,16 +4,26 @@
 //
 // Code for robot arm user control.
 
+#define armRestingSpeed -10
+#define armDownSpeed -75
+#define armUpSpeed 127
 
+bool holding = true;
 //ARM CONTROL SYSTEM
 void userArm(){
-	if (vexRT(Btn6U)){ //Arm moving up
-		setArm(127); //Full upward voltage.
+	if(vexRT(Btn5U)){
+		setArm(armUpSpeed);
+		holding = false;
 	}
-	else if(vexRT(Btn6D)){ //Arm moving up
-		setArm(-75); //Partial upward voltage.
+	else if(vexRT(Btn5D)){
+		setArm(armDownSpeed);
+		holding = true;
 	}
-	else{ //Arm moving down
-		setArm(0); //Full downward voltage.
+	else {
+		if(holding) {
+			setArm(armRestingSpeed);
+			} else {
+			setArm(0);
+		}
 	}
 }
