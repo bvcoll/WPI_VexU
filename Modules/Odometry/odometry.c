@@ -21,7 +21,7 @@ void odom_SetScales(const float scale, const float turnScale)
 
 void odom_GuessScales(const float chassisDiameter, const float wheelDiameter)
 {
-  bci_internal_odom.scale = wheelDiameter * PI * UTIL_IN_TO_MM; //1 in = 25.4 mm
+  bci_internal_odom.scale = wheelDiameter * PI * 25.4; //1 in = 25.4 mm    used to say UTIL_IN_TO_MM
   bci_internal_odom.turnScale = chassisDiameter / wheelDiameter;
 }
 

@@ -10,7 +10,8 @@ enum armState
 	ARM_USER,
 	ARM_HOLDING,
 	ARM_DUMPING,
-	ARM_RESET
+	ARM_RESET,
+	ARM_DEPLOY
 
 };
 
@@ -30,8 +31,11 @@ task ArmClawController()
 		switch(armTask_ArmState) {
 
 		case ARM_USER:
-			userClaw();
-			userArm();
+
+			if (true) {
+				userClaw();
+				userArm();
+			}
 			break;
 
 		case ARM_HOLDING:
@@ -67,6 +71,15 @@ task ArmClawController()
 				SensorValue(I2C_1) = 0;
 				armTask_ArmState = ARM_USER;
 			}
+			break;
+
+		case ARM_DEPLOY:
+			openClaw();
+			setArm(75);
+			delay(250);
+			setArm(0);
+			delay(250);
+			armTask_ArmState = ARM_RESET;
 			break;
 
 		}

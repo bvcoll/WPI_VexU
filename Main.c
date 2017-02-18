@@ -32,7 +32,7 @@
 int middleArmSetpoint = 150; //Setpoint to hold at for driving around the field
 int scoreThreshold = 300;  //Point at which to open the claw
 int topArmSetpoint = 700;  //Setpoint for dumping
-
+bool isAutonomous = false;
 
 /* USER CONTROL ROBOT STATES */
 #define BOTTOM 0
@@ -40,7 +40,10 @@ int topArmSetpoint = 700;  //Setpoint for dumping
 #define DUMPING 2
 #define RESET 3
 
-
+//ARM PID CONSTANTS
+float kP_arm = 0.625, kI_arm = 0, kD_arm = 0;
+//Drive PID CONSTANTS
+float kP_drive = 4.5, kI_drive = 0, kD_drive = 0;
 
 
 
@@ -62,8 +65,6 @@ int topArmSetpoint = 700;  //Setpoint for dumping
 #include "Claw.c" //All control code for the claw.
 #include "Drive.c" //Basic drive functions.
 #include "Arm.c" //Basic arm functions.
-#include "DrivePID.c" //Drive PID movement functions.
-#include "DriveUserControl.c" //User control code for the drive.
 #include "ArmUserControl.c" //User control code for the arm.
 #include "ArmClawController.c"
 
@@ -85,6 +86,7 @@ void pre_auton()
 	// running between Autonomous and Driver controlled modes. You will need to
 	// manage all user created tasks if set to false.
 	bStopTasksBetweenModes = true;
+	resetEncoders();
 
 }
 
@@ -115,7 +117,7 @@ task autonomous()
 /*  You must modify the code to add your own robot specific commands here.   */
 /*---------------------------------------------------------------------------*/
 
-
+float leftEncoderValue, rightEncoderValue;
 task usercontrol()
 {
 	//Initialize odometry to run off of our left and right quadrature encoders
@@ -134,10 +136,21 @@ task usercontrol()
 
 	while (true)
 	{
-
+		leftEncoderValue = getLeftEncoder();
+		rightEncoderValue = getRightEncoder();
 		/*User drive method*/
-		arcadeDrive();
+		//arcadeDrive();
+		if(vexRT(Btn8L)) {
+			resetEncoders();
+		}
 
+		//for testing driving PID
+		if(vexRT(Btn8R)) {
+			driveDistance(-48);
+		}
+		else {
+			arcadeDrive();
+		}
 
 		/*User state changes*/
 		if (vexRT(Btn7D)) {

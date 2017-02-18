@@ -7,8 +7,7 @@
 pos_PID armPID; //Make a pid controller for the arm
 
 
-//ARM PID CONSTANTS
-float kP_arm = 0.625, kI_arm = 0, kD_arm = 0;
+
 
 
 //Moves the arm at the given voltage.
