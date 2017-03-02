@@ -4,7 +4,7 @@
 //
 // Code for pneumatic claw control.
 
-bool isClawClosed = true;
+bool isClawClosed = false;
 
 //Opens the claw.
 void openClaw(){

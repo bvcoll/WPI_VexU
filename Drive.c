@@ -5,8 +5,11 @@
 // Code for basic robot drive functions.
 
 pos_PID drivePID; //Make a pid controller for the arm
+pos_PID turnPID; //Make a pid controller for the arm
 float avgEncoders;
 int drivePIDOutput;
+bool driveDone = false;
+bool turnDone = false;
 
 
 int removeDeadband(int input) {
@@ -29,6 +32,10 @@ float getLeftEncoder() {
 
 float getRightEncoder() {
 	return ((float)SensorValue(rightEncoder) / 360.0) * 3.25 * PI;
+}
+
+float getGyro(){
+	return (SensorValue(leftEncoder) - SensorValue(rightEncoder)) / 8.92;
 }
 
 float getAvgEncoder(){
@@ -55,7 +62,15 @@ void autoDrive(int voltage) {
 	motor(LD1) = motor(LD2) = motor(LD3) = motor(RD1)  = motor(RD2) = motor(RD3) = voltage;
 }
 
+void autoTurn(int voltage) {
+	motor(LD1) = motor(LD2) = motor(LD3) = voltage;
+	motor(RD1)  = motor(RD2) = motor(RD3) = -voltage;
+}
+
 void driveDistance(int distance) {
+	driveDone = false;
+	resetEncoders();
+	while(!driveDone){
 	//Initialize our pid controller with sensor myQuad and gains
 	pos_PID_InitController(&drivePID, leftEncoder , kP_drive, kI_drive, kD_drive);
 
@@ -73,9 +88,55 @@ void driveDistance(int distance) {
 	//semi janky fix to stop the robot from drifting (why u no have break mode vex)
 	if(abs(drivePIDOutput) < 15) {
 		autoDrive(10 * -direction);
+		wait1Msec(100);
+		driveDone = true;
 	}
 	else {
 		autoDrive(drivePIDOutput);
 
 	}
+}
+}
+
+float gyro, turnPIDOutput;
+int direction;
+void turnAngle(int angle) {
+	turnDone = false;
+	resetEncoders();
+	while(!turnDone){
+	//Initialize our pid controller with sensor myQuad and gains
+	pos_PID_InitController(&turnPID, leftEncoder , kP_turn, kI_turn, kD_turn);
+
+	//Set the target position for our pid controller
+	pos_PID_SetTargetPosition(&turnPID, angle);
+
+	gyro = getGyro();
+
+	//Run our motor with the output of the pid controller
+	turnPIDOutput = pos_PID_StepController(&turnPID , gyro);
+
+	//int direction = turnPIDOutput/abs(turnPIDOutput);
+	if(turnPIDOutput > 0){
+		direction = 1;
+	} else {
+		direction = -1;
+	}
+
+	//semi janky fix to stop the robot from drifting (why u no have break mode vex)
+	if(abs(turnPIDOutput) < 25) { //15
+		autoTurn(15 * -direction);
+	  wait1Msec(100);
+		turnDone = true;
+	}
+	else {
+		autoTurn(turnPIDOutput);
+
+	}
+}
+}
+
+void driveIntoWall(int time){
+	autoDrive(-127);
+	wait1Msec(time);
+	autoDrive(0);
 }

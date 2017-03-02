@@ -44,6 +44,8 @@ bool isAutonomous = false;
 float kP_arm = 0.625, kI_arm = 0, kD_arm = 0;
 //Drive PID CONSTANTS
 float kP_drive = 4.5, kI_drive = 0, kD_drive = 0;
+//Drive PID CONSTANTS
+float kP_turn = 1.35, kI_turn = 0, kD_turn = 0;
 
 
 
@@ -67,6 +69,7 @@ float kP_drive = 4.5, kI_drive = 0, kD_drive = 0;
 #include "Arm.c" //Basic arm functions.
 #include "ArmUserControl.c" //User control code for the arm.
 #include "ArmClawController.c"
+#include "Auto.c"
 
 
 
@@ -140,17 +143,19 @@ task usercontrol()
 		rightEncoderValue = getRightEncoder();
 		/*User drive method*/
 		//arcadeDrive();
-		if(vexRT(Btn8L)) {
-			resetEncoders();
+
+		if(vexRT(Btn8R)){
+		  auto_score();
+			//turnAngle(90)
+		} else {
+		arcadeDrive();
 		}
 
-		//for testing driving PID
-		if(vexRT(Btn8R)) {
-			driveDistance(-48);
+		if(vexRT(Btn8L)){
+		resetEncoders();
 		}
-		else {
-			arcadeDrive();
-		}
+
+		gyro = getGyro();
 
 		/*User state changes*/
 		if (vexRT(Btn7D)) {
