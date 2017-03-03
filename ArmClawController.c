@@ -9,6 +9,7 @@ enum armState
 	ARM_INIT,
 	ARM_USER,
 	ARM_HOLDING,
+	ARM_HIGH_HOLDING,
 	ARM_DUMPING,
 	ARM_RESET,
 	ARM_DEPLOY
@@ -40,6 +41,11 @@ task ArmClawController()
 
 		case ARM_HOLDING:
 			pidArm(middleArmSetpoint);
+			closeClaw();
+			break;
+
+		case ARM_HIGH_HOLDING:
+			pidArm(highHoldingArmSetpoint);
 			closeClaw();
 			break;
 

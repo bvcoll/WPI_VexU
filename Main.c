@@ -29,8 +29,10 @@
 #define inToMm 25.4 //Conversion factor for autonomous PID movement.
 
 /* GLOBAL VARIABLES */
-int middleArmSetpoint = 150; //Setpoint to hold at for driving around the field
+// old 150
+int middleArmSetpoint = 200; //Setpoint to hold at for driving around the field
 int scoreThreshold = 300;  //Point at which to open the claw
+int highHoldingArmSetpoint = 350;
 int topArmSetpoint = 700;  //Setpoint for dumping
 bool isAutonomous = false;
 
@@ -45,7 +47,7 @@ float kP_arm = 0.625, kI_arm = 0, kD_arm = 0;
 //Drive PID CONSTANTS
 float kP_drive = 4.5, kI_drive = 0, kD_drive = 0;
 //Drive PID CONSTANTS
-float kP_turn = 1.35, kI_turn = 0, kD_turn = 0;
+float kP_turn = 1.35, kI_turn = 0, kD_turn = 0.2;
 
 
 

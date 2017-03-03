@@ -136,7 +136,7 @@ void turnAngle(int angle) {
 }
 
 void driveIntoWall(int time){
-	autoDrive(-127);
+	autoDrive(-100);
 	wait1Msec(time);
 	autoDrive(0);
 }
