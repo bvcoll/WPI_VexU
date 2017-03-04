@@ -4,7 +4,7 @@
 //
 // Code for robot arm user control.
 
-#define armRestingSpeed -10
+#define armRestingSpeed -5
 #define armDownSpeed -75
 #define armUpSpeed 127
 

@@ -11,12 +11,16 @@ void auto_move(){
 }
 
 void auto_score(){
+	driveDistance(-24);
+	armTask_ArmState = ARM_DEPLOY;
+	wait1Msec(1500);
+	driveDistance(10);
 	armTask_ArmState = ARM_HOLDING;
 	wait1Msec(200);
 	driveDistance(-12);
 	armTask_ArmState = ARM_DUMPING;
 	driveIntoWall(1500);
-	driveDistance(34);
+	driveDistance(36); // old 34
 	armTask_ArmState = ARM_HOLDING;
 	driveDistance(-12);
 	armTask_ArmState = ARM_DUMPING;
@@ -34,14 +38,14 @@ void auto_score(){
 	driveDistance(55);
 	armTask_ArmState = ARM_HIGH_HOLDING;
 	driveDistance(34); // old 36
-	turnAngle(95);
+	turnAngle(90);
 	//back into fense
 	driveDistance(-12);
 	armTask_ArmState = ARM_DUMPING;
 	driveIntoWall(1500);
 	wait1Msec(250);
 	// drive forward to grab last cube
-	driveDistance(32);
+	driveDistance(34);
 	armTask_ArmState = ARM_HOLDING;
 	driveDistance(-12);
 	armTask_ArmState = ARM_DUMPING;
