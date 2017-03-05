@@ -58,6 +58,12 @@ void arcadeDrive(){
 	rightDrive(vexRT(Ch3) - vexRT(Ch1));
 }
 
+//TANK DRIVE SYSTEM
+void tankDrive(){
+	leftDrive(vexRT(Ch3));
+	rightDrive(vexRT(Ch2));
+}
+
 void autoDrive(int voltage) {
 	motor(LD1) = motor(LD2) = motor(LD3) = motor(RD1)  = motor(RD2) = motor(RD3) = voltage;
 }
@@ -135,8 +141,8 @@ void turnAngle(int angle) {
 }
 }
 
-void driveIntoWall(int time){
-	autoDrive(-100);
+void driveIntoWall(int time, int power=-65){
+	autoDrive(power);
 	wait1Msec(time);
 	autoDrive(0);
 }

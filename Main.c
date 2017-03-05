@@ -4,6 +4,8 @@
 #pragma config(Sensor, dgtl5,  armBottomLimit, sensorTouch)
 #pragma config(Sensor, dgtl6,  armTopLimit,    sensorTouch)
 #pragma config(Sensor, dgtl12, clawSolenoid,   sensorDigitalOut)
+#pragma config(Sensor, dgtl8, ptoSolenoid, 	 sensorDigitalOut)
+#pragma config(Sensor, dgtl9, hookSolenoid,   sensorDigitalOut)
 #pragma config(Sensor, I2C_1,  ,               sensorQuadEncoderOnI2CPort,    , AutoAssign )
 #pragma config(Motor,  port1,           RD1,           tmotorVex393TurboSpeed_HBridge, openLoop, driveRight)
 #pragma config(Motor,  port2,           RD2,           tmotorVex393TurboSpeed_MC29, openLoop, driveRight)
@@ -67,6 +69,7 @@ float kP_turn = 1.35, kI_turn = 0, kD_turn = 0.2;
 //INCLUDES
 #include "Vex_Competition_Includes.c" //Main competition background code...do not modify!
 #include "Claw.c" //All control code for the claw.
+#include "PTO.c" //All control for hook release and pto.
 #include "Drive.c" //Basic drive functions.
 #include "Arm.c" //Basic arm functions.
 #include "ArmUserControl.c" //User control code for the arm.
@@ -147,10 +150,13 @@ task usercontrol()
 		//arcadeDrive();
 
 		if(vexRT(Btn8R)){
-		  auto_score();
-			//turnAngle(90)
+			auto_score();
+		  clearUnderBar();
+			//auto_climb();
+		//turnAngle(90)
 		} else {
-		arcadeDrive();
+			//arcadeDrive();
+			tankDrive();
 		}
 
 		if(vexRT(Btn8L)){
