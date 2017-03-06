@@ -1,13 +1,13 @@
 
 void auto_move(){
-		//armTask_ArmState = ARM_DUMPING;
-		//driveDistance(-24);
-		//driveIntoWall(1000);
-		driveDistance(30);
-		turnAngle(90);
-		driveIntoWall(1200);
-		driveDistance(96);
-		wait1Msec(1000000);
+	//armTask_ArmState = ARM_DUMPING;
+	//driveDistance(-24);
+	//driveIntoWall(1000);
+	driveDistance(30);
+	turnAngle(90);
+	driveIntoWall(1200);
+	driveDistance(96);
+	wait1Msec(1000000);
 }
 
 void auto_score(){
@@ -69,7 +69,7 @@ void auto_climb(){
 	driveIntoWall(2500);
 	wait1Msec(1000);
 	engagePTO();
-	driveIntoWall(5500, -127);
+	driveIntoWall(4500, -127);
 	lockPTO();
 }
 

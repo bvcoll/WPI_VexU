@@ -151,16 +151,16 @@ task usercontrol()
 
 		if(vexRT(Btn8R)){
 			auto_score();
-		  clearUnderBar();
+			clearUnderBar();
 			//auto_climb();
-		//turnAngle(90)
-		} else {
+			//turnAngle(90)
+			} else {
 			//arcadeDrive();
 			tankDrive();
 		}
 
 		if(vexRT(Btn8L)){
-		resetEncoders();
+			resetEncoders();
 		}
 
 		gyro = getGyro();
