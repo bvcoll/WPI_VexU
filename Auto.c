@@ -12,7 +12,6 @@ void auto_move(){
 
 void auto_score(){
 	driveDistance(-24);
-	//openClaw();
 	armTask_ArmState = ARM_DEPLOY;
 	wait1Msec(1500);
 	driveDistance(10);
@@ -72,11 +71,11 @@ void auto_climb(){
 
 	releaseHook();
 	wait1Msec(2000);
-	driveIntoWall(2500);
+	driveIntoWall(2900);
 	armTask_ArmState = ARM_HOLDING;
 	wait1Msec(1000);
 	engagePTO();
-	driveIntoWall(4800, -127);
+	driveIntoWall(5300, -127);
 	lockPTO();
 	resetHook();
 }
@@ -114,4 +113,37 @@ void programmingSkills(){
 void auton(bool isRed){
 	// 1 for red, -1 for blue
 	int dir = 2 * isRed - 1;
+
+	//Back up to deploy
+	driveDistance(-10);
+	armTask_ArmState = ARM_DEPLOY;
+	wait1Msec(1500);
+
+	//Collect row
+	driveDistance(75);
+
+	//Grab and turn
+	armTask_ArmState = ARM_HIGH_HOLDING;
+	wait1Msec(600);
+	turnAngle(-90*dir);
+
+	//Back up
+	driveDistance(-12);
+	armTask_ArmState = ARM_HOLDING;
+	driveDistance(-12);
+	armTask_ArmState = ARM_DUMPING;
+	driveIntoWall(1500,-100);
+	// drive then turn
+	driveDistance(26); // old 30
+	turnAngle(90*dir);
+	driveIntoWall(1800);
+	//drive to get cube
+	driveDistance(56);
+	armTask_ArmState = ARM_HIGH_HOLDING;
+	driveDistance(35); // old 36
+	turnAngle(-90*dir);
+	//back into fense
+	driveDistance(-12);
+	armTask_ArmState = ARM_DUMPING;
+	driveIntoWall(1800,-100);
 }
