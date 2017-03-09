@@ -1,7 +1,7 @@
 
 void auto_move(){
 	//armTask_ArmState = ARM_DUMPING;
-	//driveDistance(-24);
+	//driveDistance(-24); //Hi
 	//driveIntoWall(1000);
 	driveDistance(30);
 	turnAngle(90);

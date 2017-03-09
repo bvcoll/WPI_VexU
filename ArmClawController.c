@@ -55,7 +55,7 @@ task ArmClawController()
 			pidArm(topArmSetpoint);
 
 			//open the claw once above the scoring threshold
-			if (SensorValue(I2C_1) < scoreThreshold) {
+			if (SensorValue(armEncoder) < scoreThreshold) {
 				closeClaw();
 			}
 			else {
@@ -63,7 +63,7 @@ task ArmClawController()
 			}
 
 			//Change robot state to bottom once near top setpoint
-			if (SensorValue(I2C_1) >= topArmSetpoint - 25) {
+			if (SensorValue(armEncoder) >= topArmSetpoint - 25) {
 				armTask_ArmState = ARM_RESET;
 			}
 
@@ -74,7 +74,7 @@ task ArmClawController()
 				setArm(armDownSpeed);
 			}
 			else {
-				SensorValue(I2C_1) = 0;
+				SensorValue(armEncoder) = 0;
 				armTask_ArmState = ARM_USER;
 			}
 			break;
