@@ -7,8 +7,17 @@
 bool hookReleased = false;
 //Opens the claw.
 void releaseHook(){
-	hookReleased = 1-hookReleased;
-	SensorValue(hookSolenoid) = hookReleased;
+	if(!hookReleased) {
+		SensorValue(hookSolenoid) = 1;
+		hookReleased = true;
+	}
+}
+
+void resetHook(){
+	if(hookReleased){
+		SensorValue(hookSolenoid) = 0;
+		hookReleased = false;
+	}
 }
 
 //Closes the claw.

@@ -65,7 +65,12 @@ void tankDrive(){
 }
 
 void autoDrive(int voltage) {
-	motor(LD1) = motor(LD2) = motor(LD3) = motor(RD1)  = motor(RD2) = motor(RD3) = voltage;
+	int turn = 0;
+	if(abs(voltage) > 15){
+		turn = getGyro() * 4;
+	}
+	motor(LD1) = motor(LD2) = motor(LD3) = voltage - turn;
+	motor(RD1)  = motor(RD2) = motor(RD3) = voltage + turn;
 }
 
 void autoTurn(int voltage) {
@@ -76,13 +81,11 @@ void autoTurn(int voltage) {
 void driveDistance(int distance) {
 	driveDone = false;
 	resetEncoders();
+	//Initialize our pid controller with sensor myQuad and gains
+	pos_PID_InitController(&drivePID, leftEncoder , kP_drive, kI_drive, kD_drive);
+	//Set the target position for our pid controller
+	pos_PID_SetTargetPosition(&drivePID, distance);
 	while(!driveDone){
-		//Initialize our pid controller with sensor myQuad and gains
-		pos_PID_InitController(&drivePID, leftEncoder , kP_drive, kI_drive, kD_drive);
-
-		//Set the target position for our pid controller
-		pos_PID_SetTargetPosition(&drivePID, distance);
-
 
 		avgEncoders = getAvgEncoder();
 
@@ -92,7 +95,7 @@ void driveDistance(int distance) {
 		int direction = drivePIDOutput/abs(drivePIDOutput);
 
 		//semi janky fix to stop the robot from drifting (why u no have break mode vex)
-		if(abs(drivePIDOutput) < 15) {
+		if(abs(drivePIDOutput) < 20) {
 			autoDrive(10 * -direction);
 			wait1Msec(100);
 			driveDone = true;
@@ -101,6 +104,7 @@ void driveDistance(int distance) {
 			autoDrive(drivePIDOutput);
 
 		}
+		wait1Msec(15);
 	}
 }
 
@@ -138,11 +142,18 @@ void turnAngle(int angle) {
 			autoTurn(turnPIDOutput);
 
 		}
+		wait1Msec(15);
 	}
 }
 
 void driveIntoWall(int time, int power=-65){
+	resetEncoders();
 	autoDrive(power);
-	wait1Msec(time);
+	while(time>0){
+		autoDrive(power);
+		time-=20;
+		wait1Msec(20);
+	}
+	//wait1Msec(time);
 	autoDrive(0);
 }

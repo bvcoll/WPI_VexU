@@ -110,6 +110,9 @@ void pre_auton()
 
 task autonomous()
 {
+	startTask(ArmClawController);
+	programmingSkills();
+	wait1Msec(100000);
 	// ..........................................................................
 	// Insert user code here.
 	// ..........................................................................
@@ -150,15 +153,22 @@ task usercontrol()
 		//arcadeDrive();
 
 		if(vexRT(Btn8R)){
-			auto_score();
-			clearUnderBar();
+			programmingSkills();
+			//auto_score();
+			//clearUnderBar();
 			//auto_climb();
-			//turnAngle(90)
+			//turnAngle(90);
+			//driveDistance(-36);
 			} else {
-			//arcadeDrive();
-			tankDrive();
+			arcadeDrive();
+			//tankDrive();
 		}
-
+		if(vexRT(Btn7U)){
+			releaseHook();
+		}
+		else{
+			resetHook();
+		}
 		if(vexRT(Btn8L)){
 			resetEncoders();
 		}
@@ -178,6 +188,6 @@ task usercontrol()
 		if (vexRT(Btn6U)) {
 			armTask_ArmState = ARM_DUMPING;
 		}
-
+		wait1Msec(15);
 	}
 }
