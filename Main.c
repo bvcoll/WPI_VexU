@@ -32,9 +32,9 @@
 
 /* GLOBAL VARIABLES */
 // old 150
-int middleArmSetpoint = 175; //Setpoint to hold at for driving around the field
+int middleArmSetpoint = 145; //Setpoint to hold at for driving around the field
 int scoreThreshold = 250;  //Point at which to open the claw
-int highHoldingArmSetpoint = 300;
+int highHoldingArmSetpoint = 200;
 int topArmSetpoint = 615;  //Setpoint for dumping
 bool isAutonomous = false;
 
@@ -45,7 +45,7 @@ bool isAutonomous = false;
 #define RESET 3
 
 //ARM PID CONSTANTS
-float kP_arm = 0.625, kI_arm = 0, kD_arm = 0;
+float kP_arm = 0.555, kI_arm = 0, kD_arm = 0;
 //Drive PID CONSTANTS
 float kP_drive = 4.5, kI_drive = 0, kD_drive = 0;
 //Drive PID CONSTANTS
@@ -144,7 +144,7 @@ task usercontrol()
 	//modify the values of the quadrature encoders we passed in earlier
 	//startTask(trackOdometry);
 	startTask(ArmClawController);
-
+	int ptoPressed = 0;
 	while (true)
 	{
 		leftEncoderValue = getLeftEncoder();
@@ -169,6 +169,15 @@ task usercontrol()
 		else{
 			resetHook();
 		}
+
+
+		if(vexRT(Btn7R) && ptoPressed == false){
+			engagePTO();
+			ptoPressed = true;
+		}
+		else if(!vexRT(Btn7R) && ptoPressed == true){
+			ptoPressed = false;
+		}
 		if(vexRT(Btn8L)){
 			resetEncoders();
 		}
@@ -177,9 +186,9 @@ task usercontrol()
 
 		/*User state changes*/
 		if (vexRT(Btn7D)) {
-			armTask_ArmState = ARM_RESET;
+			armTask_ArmState = ARM_HIGH_HOLDING;
 		}
-		if (vexRT(Btn7L) || vexRT(Btn7R)) {
+		if (vexRT(Btn7L)) {
 			armTask_ArmState = ARM_USER;
 		}
 		if(vexRT(Btn6D)) {

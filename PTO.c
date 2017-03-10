@@ -20,12 +20,23 @@ void resetHook(){
 	}
 }
 
+int ptoEngaged = false;
 //Closes the claw.
 void engagePTO(){
-	SensorValue(ptoSolenoid) = 1;
+	if(ptoEngaged){
+		SensorValue(ptoSolenoid) = 0;
+		ptoEngaged = false;
+	}
+	else if(!ptoEngaged){
+		SensorValue(ptoSolenoid) = 1;
+		ptoEngaged = true;
+	}
 }
 
 //User control program for the claw.
 void lockPTO(){
-	SensorValue(ptoSolenoid) = 0;
+	if(ptoEngaged){
+		SensorValue(ptoSolenoid) = 0;
+		ptoEngaged = false;
+	}
 }

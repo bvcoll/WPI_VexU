@@ -37,7 +37,7 @@ void auto_score(){
 	//drive to get cube
 	driveDistance(56);
 	armTask_ArmState = ARM_HIGH_HOLDING;
-	driveDistance(35); // old 36
+	driveDistance(36); // old 36
 	turnAngle(90);
 	//back into fense
 	driveDistance(-12);
@@ -59,11 +59,11 @@ void auto_climb(){
 
 	//Align to first wall
 	driveIntoWall(1500);
-	driveDistance(24);
+	driveDistance(22);
 	turnAngle(90);
 
 	//Align to second wall
-	driveIntoWall(1200);
+	driveIntoWall(1500);
 	driveDistance(24);
 
 	//Turn to bar
@@ -110,9 +110,9 @@ void programmingSkills(){
 	auto_climb();
 }
 
-void auton(bool isRed){
+void auton(bool isLeft){
 	// 1 for red, -1 for blue
-	int dir = 2 * isRed - 1;
+	int dir = 2 * isLeft - 1;
 
 	//Back up to deploy
 	driveDistance(-10);
@@ -120,12 +120,12 @@ void auton(bool isRed){
 	wait1Msec(1500);
 
 	//Collect row
-	driveDistance(75);
+	driveDistance(80);
 
 	//Grab and turn
 	armTask_ArmState = ARM_HIGH_HOLDING;
 	wait1Msec(600);
-	turnAngle(-90*dir);
+	turnAngle(90*dir);
 
 	//Back up
 	driveDistance(-12);
@@ -139,7 +139,7 @@ void auton(bool isRed){
 	driveIntoWall(1800);
 	//drive to get cube
 	driveDistance(56);
-	armTask_ArmState = ARM_HIGH_HOLDING;
+	armTask_ArmState = ARM_HOLDING;
 	driveDistance(35); // old 36
 	turnAngle(-90*dir);
 	//back into fense
