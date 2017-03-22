@@ -77,7 +77,7 @@ float kP_turn = 1.35, kI_turn = 0, kD_turn = 0.2;
 //Include PID libraries
 #define BCI_USE_POS_PID
 #define BCI_USE_ODOMETRY
-#include "BCI.h"
+#include "BCI/BCI.h"
 
 
 
