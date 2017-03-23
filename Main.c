@@ -303,26 +303,3 @@ void startAutonomous()
 			break;
 	}
 }
-
-//LCD Library callback function
-void lcd_invoke(int func)
-{
-	switch (func)
-	{
-	case 1:
-		endPreAuton = true;
-		stopTask(lcdControlTask);
-		break;
-
-	case 2:
-		autonSelection = selectAutonomous();
-		break;
-
-	case 3:
-		programmingSkills();
-		break;
-
-	default:
-		break;
-	}
-}
