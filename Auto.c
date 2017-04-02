@@ -75,7 +75,7 @@ void auto_climb(){
 	armTask_ArmState = ARM_HOLDING;
 	wait1Msec(1000);
 	engagePTO();
-	driveIntoWall(5300, -127);
+	driveIntoWall(6300, -127);
 	lockPTO();
 	resetHook();
 }
@@ -123,14 +123,14 @@ void auton(bool isLeft){
 	driveDistance(80);
 
 	//Grab and turn
-	armTask_ArmState = ARM_HIGH_HOLDING;
+	armTask_ArmState = ARM_HOLDING;
 	wait1Msec(600);
-	turnAngle(90*dir);
+	driveDistance(-8);
+	turnAngle(-90*dir);
 
 	//Back up
-	driveDistance(-12);
-	armTask_ArmState = ARM_HOLDING;
-	driveDistance(-12);
+	driveDistance(24);
+	turnAngle(-180*dir);
 	armTask_ArmState = ARM_DUMPING;
 	driveIntoWall(1500,-100);
 	// drive then turn
