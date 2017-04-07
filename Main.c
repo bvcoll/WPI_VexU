@@ -6,7 +6,7 @@
 #pragma config(Sensor, dgtl9,  hookSolenoid,   sensorDigitalOut)
 #pragma config(Sensor, dgtl11, ptoSolenoid,    sensorDigitalOut)
 #pragma config(Sensor, dgtl12, clawSolenoid,   sensorDigitalOut)
-#pragma config(Motor,  port1,           RD1,           tmotorVex393TurboSpeed_HBridge, openLoop, driveRight)
+#pragma config(Motor,  port1,           RD1,           tmotorVex393TurboSpeed_HBridge, openLoop, reversed, driveRight)
 #pragma config(Motor,  port2,           RD2,           tmotorVex393TurboSpeed_MC29, openLoop, driveRight)
 #pragma config(Motor,  port3,           A1,            tmotorVex393HighSpeed_MC29, openLoop, reversed)
 #pragma config(Motor,  port4,           RD3,           tmotorVex393TurboSpeed_MC29, openLoop)
@@ -151,6 +151,7 @@ task usercontrol()
 	int ptoPressed = 0;
 	while (true)
 	{
+		userClaw();
 		leftEncoderValue = getLeftEncoder();
 		rightEncoderValue = getRightEncoder();
 		/*User drive method*/
@@ -188,15 +189,23 @@ task usercontrol()
 
 		gyro = getGyro();
 
+		if (vexRT(Btn5U)) {
+			armTask_ArmState = ARM_HIGH_HOLDING;
+			setArm(127);
+		}
+		else if (vexRT(Btn5D)) {
+			armTask_ArmState = ARM_USER;
+			setArm(-60);
+		}
+		else {
+			setArm(0);
+		}
 		/*User state changes*/
 		if (vexRT(Btn7D)) {
 			armTask_ArmState = ARM_HIGH_HOLDING;
 		}
-		else if (vexRT(Btn7L)) {
+		if (vexRT(Btn7L)) {
 			armTask_ArmState = ARM_USER;
-		}
-		else {
-			setArm(0);
 		}
 		if(vexRT(Btn6D)) {
 			armTask_ArmState = ARM_HOLDING;
