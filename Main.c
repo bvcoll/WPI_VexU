@@ -90,6 +90,7 @@ float kP_turn = 1.35, kI_turn = 0, kD_turn = 0.2;
 #include "ArmClawController.c"
 #include "Auto.c"
 #include "LCDAutonomousSelect.c"
+#include "PID_Drive.c"
 
 //Menus
 //Level 1 - General Info
