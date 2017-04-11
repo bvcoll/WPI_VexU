@@ -1,8 +1,8 @@
+#pragma config(Sensor, in1,    armPot,         sensorPotentiometer)
 #pragma config(Sensor, dgtl1,  rightEncoder,   sensorQuadEncoder)
 #pragma config(Sensor, dgtl3,  leftEncoder,    sensorQuadEncoder)
 #pragma config(Sensor, dgtl5,  armBottomLimit, sensorTouch)
 #pragma config(Sensor, dgtl6,  armTopLimit,    sensorTouch)
-#pragma config(Sensor, dgtl7,  armEncoder,     sensorQuadEncoder)
 #pragma config(Sensor, dgtl9,  hookSolenoid,   sensorDigitalOut)
 #pragma config(Sensor, dgtl11, ptoSolenoid,    sensorDigitalOut)
 #pragma config(Sensor, dgtl12, clawSolenoid,   sensorDigitalOut)
@@ -34,20 +34,14 @@
 
 /* GLOBAL VARIABLES */
 // old 150
-int middleArmSetpoint = 145; //Setpoint to hold at for driving around the field
-int scoreThreshold = 250;  //Point at which to open the claw
-int highHoldingArmSetpoint = 220;
-int topArmSetpoint = 615;  //Setpoint for dumping
-bool isAutonomous = false;
+int middleArmSetpoint = 1000; //Setpoint to hold at for driving around the field
+int highHoldingArmSetpoint = 1325;
+int topArmSetpoint = 3000; //3000 //Setpoint for dumping
+int scoreThreshold = topArmSetpoint - 1500;  //Point at which to open the claw
 
-/* USER CONTROL ROBOT STATES */
-#define BOTTOM 0
-#define HOLDING 1
-#define DUMPING 2
-#define RESET 3
 
 //ARM PID CONSTANTS
-float kP_arm = 0.555, kI_arm = 0, kD_arm = 0;
+float kP_arm = 0.3, kI_arm = 0, kD_arm = 0;
 //Drive PID CONSTANTS
 float kP_drive = 4.5, kI_drive = 0, kD_drive = 0;
 //Drive PID CONSTANTS
@@ -132,7 +126,7 @@ task autonomous()
 /*  You must modify the code to add your own robot specific commands here.   */
 /*---------------------------------------------------------------------------*/
 
-float leftEncoderValue, rightEncoderValue;
+float leftEncoderValue, rightEncoderValue, pot;
 task usercontrol()
 {
 	//Initialize odometry to run off of our left and right quadrature encoders
@@ -147,64 +141,40 @@ task usercontrol()
 	//Start the odometry task. From this point onward, we are not allowed to
 	//modify the values of the quadrature encoders we passed in earlier
 	//startTask(trackOdometry);
-	//startTask(ArmClawController);
-	int ptoPressed = 0;
+	startTask(ArmClawController);
 	while (true)
 	{
-		userClaw();
+
 		leftEncoderValue = getLeftEncoder();
 		rightEncoderValue = getRightEncoder();
+
 		/*User drive method*/
 		arcadeDrive();
+		//userClaw();
+		//userArm();
 		//tankDrive();
+
 		if(vexRT(Btn8R)){
 			//programmingSkills();
-			//auto_score();
-			//clearUnderBar();
-			//auto_climb();
-			//turnAngle(90);
-			//driveDistance(-36);
+
 			} else {
 			//arcadeDrive();
 			//tankDrive();
 		}
-		if(vexRT(Btn7U)){
-			releaseHook();
-		}
-		else{
-			resetHook();
-		}
 
-
-		if(vexRT(Btn7R) && ptoPressed == false){
-			engagePTO();
-			ptoPressed = true;
-		}
-		else if(!vexRT(Btn7R) && ptoPressed == true){
-			ptoPressed = false;
-		}
 		if(vexRT(Btn8L)){
 			resetEncoders();
 		}
 
 		gyro = getGyro();
+		pot = SensorValue(armPot);
 
-		if (vexRT(Btn5U)) {
-			armTask_ArmState = ARM_HIGH_HOLDING;
-			setArm(127);
-		}
-		else if (vexRT(Btn5D)) {
-			armTask_ArmState = ARM_USER;
-			setArm(-60);
-		}
-		else {
-			setArm(0);
-		}
+
 		/*User state changes*/
-		if (vexRT(Btn7D)) {
+		if (vexRT(Btn7R)) {
 			armTask_ArmState = ARM_HIGH_HOLDING;
 		}
-		if (vexRT(Btn7L)) {
+		if (vexRT(Btn7D) || vexRT(Btn5U)) {
 			armTask_ArmState = ARM_USER;
 		}
 		if(vexRT(Btn6D)) {

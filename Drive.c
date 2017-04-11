@@ -52,10 +52,17 @@ void rightDrive(int voltage){
 	motor(RD1)  = motor(RD2) = motor(RD3) = removeDeadband(voltage);
 }
 
+int leftValue, rightValue
 //ARCADE DRIVE SYSTEM
 void arcadeDrive(){
-	leftDrive(vexRT(Ch3) + vexRT(Ch1));
-	rightDrive(vexRT(Ch3) - vexRT(Ch1));
+	if(vexRT(Btn5D)){
+		leftDrive(vexRT(Ch3) + vexRT(Ch1)/2);
+		rightDrive(vexRT(Ch3) - vexRT(Ch1)/2);
+	}
+	else{
+		leftDrive(vexRT(Ch3) + vexRT(Ch1));
+		rightDrive(vexRT(Ch3) - vexRT(Ch1));
+	}
 }
 
 //TANK DRIVE SYSTEM
