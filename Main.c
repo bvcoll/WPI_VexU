@@ -28,6 +28,13 @@
 /*                                                                           */
 /*---------------------------------------------------------------------------*/
 
+// This code is for the VEX cortex platform
+#pragma platform(VEX2)
+
+// Select Download method as "competition"
+#pragma competitionControl(Competition)
+#include "Vex_Competition_Includes.c" //Main competition background code...do not modify!
+
 /* DEFINE CONSTANTS */
 #define MAX_VOLTAGE 127 //Maximum voltage to be applied to a motor.
 #define MIN_VOLTAGE (-127) //Minimum voltage to be applied to a motor.
@@ -60,26 +67,15 @@ float kP_drive = 4.5, kI_drive = 0, kD_drive = 0;
 //Drive PID CONSTANTS
 float kP_turn = 1.35, kI_turn = 0, kD_turn = 0.2;
 
-
-
-// This code is for the VEX cortex platform
-#pragma platform(VEX2)
-
-// Select Download method as "competition"
-#pragma competitionControl(Competition)
-#include "Vex_Competition_Includes.c" //Main competition background code...do not modify!
-
 //LCD Chooser Defines
 #define LCD_SAFETY_REQ_COMP_SWITCH //prevents waiting for LCD imput blocking driver control when comp switch is plugged in
-#define MENU_NUM 6 //The number of displayed menu items
-#define BCI_USE_LCDCONTROL
+#define MENU_NUM 6 //The number of allocated menus
 
-//Include PID libraries
-#define BCI_USE_POS_PID
-#define BCI_USE_ODOMETRY
+//Include BCI
+#define BCI_USE_POS_PID //Position domain PID control
+#define BCI_USE_ODOMETRY //Odometry tracking
+#define BCI_USE_LCDCONTROL //LCD menu system
 #include "BCI/BCI.h"
-
-
 
 //INCLUDES
 #include "Claw.c" //All control code for the claw.
@@ -139,7 +135,6 @@ void pre_auton()
 	bLCDBacklight = true;
 	startTask(lcdControlTask);
 	while (!lcd_getLCDSafetyState() && !endPreAuton) { wait1Msec(50); }
-
 }
 
 /*---------------------------------------------------------------------------*/
@@ -154,6 +149,8 @@ void pre_auton()
 
 task autonomous()
 {
+	//Call startAutonomous() here
+
 	startTask(ArmClawController);
 	programmingSkills();
 	wait1Msec(100000);
@@ -302,28 +299,5 @@ void startAutonomous()
 
 		default:
 			break;
-	}
-}
-
-//LCD Library callback function
-void lcd_invoke(int func)
-{
-	switch (func)
-	{
-	case 1:
-		endPreAuton = true;
-		stopTask(lcdControlTask);
-		break;
-
-	case 2:
-		autonSelection = selectAutonomous();
-		break;
-
-	case 3:
-		programmingSkills();
-		break;
-
-	default:
-		break;
 	}
 }
