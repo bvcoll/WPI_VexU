@@ -88,10 +88,12 @@ void autoTurn(int voltage) {
 void driveDistance(int distance) {
 	driveDone = false;
 	resetEncoders();
+
 	//Initialize our pid controller with sensor myQuad and gains
 	pos_PID_InitController(&drivePID, leftEncoder , kP_drive, kI_drive, kD_drive);
 	//Set the target position for our pid controller
 	pos_PID_SetTargetPosition(&drivePID, distance);
+
 	while(!driveDone){
 
 		avgEncoders = getAvgEncoder();
@@ -120,13 +122,13 @@ int direction;
 void turnAngle(int angle) {
 	turnDone = false;
 	resetEncoders();
+
+	//Initialize our pid controller with sensor myQuad and gains
+	pos_PID_InitController(&turnPID, leftEncoder , kP_turn, kI_turn, kD_turn);
+	//Set the target position for our pid controller
+	pos_PID_SetTargetPosition(&turnPID, angle);
+
 	while(!turnDone){
-		//Initialize our pid controller with sensor myQuad and gains
-		pos_PID_InitController(&turnPID, leftEncoder , kP_turn, kI_turn, kD_turn);
-
-		//Set the target position for our pid controller
-		pos_PID_SetTargetPosition(&turnPID, angle);
-
 		gyro = getGyro();
 
 		//Run our motor with the output of the pid controller

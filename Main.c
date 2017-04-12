@@ -1,3 +1,4 @@
+
 #pragma config(Sensor, in1,    armPot,         sensorPotentiometer)
 #pragma config(Sensor, dgtl1,  rightEncoder,   sensorQuadEncoder)
 #pragma config(Sensor, dgtl3,  leftEncoder,    sensorQuadEncoder)
@@ -27,18 +28,29 @@
 /*                                                                           */
 /*---------------------------------------------------------------------------*/
 
+// This code is for the VEX cortex platform
+#pragma platform(VEX2)
+
+// Select Download method as "competition"
+#pragma competitionControl(Competition)
+#include "Vex_Competition_Includes.c" //Main competition background code...do not modify!
+
 /* DEFINE CONSTANTS */
 #define MAX_VOLTAGE 127 //Maximum voltage to be applied to a motor.
 #define MIN_VOLTAGE (-127) //Minimum voltage to be applied to a motor.
 #define inToMm 25.4 //Conversion factor for autonomous PID movement.
 
 /* GLOBAL VARIABLES */
-// old 150
+//Whether or not to end pre auton
+bool endPreAuton = false;
+
+//The autonomous program to run
+int autonSelection = -1;
+
 int middleArmSetpoint = 1000; //Setpoint to hold at for driving around the field
 int highHoldingArmSetpoint = 1325;
 int topArmSetpoint = 3000; //3000 //Setpoint for dumping
 int scoreThreshold = topArmSetpoint - 1500;  //Point at which to open the claw
-
 
 //ARM PID CONSTANTS
 float kP_arm = 0.3, kI_arm = 0, kD_arm = 0;
@@ -47,23 +59,17 @@ float kP_drive = 4.5, kI_drive = 0, kD_drive = 0;
 //Drive PID CONSTANTS
 float kP_turn = 1.35, kI_turn = 0, kD_turn = 0.2;
 
+//LCD Chooser Defines
+#define LCD_SAFETY_REQ_COMP_SWITCH //prevents waiting for LCD imput blocking driver control when comp switch is plugged in
+#define MENU_NUM 6 //The number of allocated menus
 
-
-// This code is for the VEX cortex platform
-#pragma platform(VEX2)
-
-// Select Download method as "competition"
-#pragma competitionControl(Competition)
-
-//Include PID libraries
-#define BCI_USE_POS_PID
-#define BCI_USE_ODOMETRY
-#include "BCI.h"
-
-
+//Include BCI
+#define BCI_USE_POS_PID //Position domain PID control
+#define BCI_USE_ODOMETRY //Odometry tracking
+#define BCI_USE_LCDCONTROL //LCD menu system
+#include "BCI/BCI.h"
 
 //INCLUDES
-#include "Vex_Competition_Includes.c" //Main competition background code...do not modify!
 #include "Claw.c" //All control code for the claw.
 #include "PTO.c" //All control for hook release and pto.
 #include "Drive.c" //Basic drive functions.
@@ -71,8 +77,17 @@ float kP_turn = 1.35, kI_turn = 0, kD_turn = 0.2;
 #include "ArmUserControl.c" //User control code for the arm.
 #include "ArmClawController.c"
 #include "Auto.c"
+#include "LCDAutonomousSelect.c"
+#include "PID_Drive.c"
 
-
+//Menus
+//Level 1 - General Info
+menu *programmingSkillsMenu;
+menu *autonomousSelectionMenu;
+menu *endPreAutonMenu;
+menu *batteryVoltageMenu;
+menu *powerExpanderVoltageMenu;
+menu *backupBatteryVoltageMenu;
 
 /*---------------------------------------------------------------------------*/
 /*                          Pre-Autonomous Functions                         */
@@ -86,12 +101,32 @@ float kP_turn = 1.35, kI_turn = 0, kD_turn = 0.2;
 
 void pre_auton()
 {
-	// Set bStopTasksBetweenModes to false if you want to keep user created tasks
-	// running between Autonomous and Driver controlled modes. You will need to
-	// manage all user created tasks if set to false.
 	bStopTasksBetweenModes = false;
 	resetEncoders();
 
+	//Menu system
+	//Level 1 - General Info
+	autonomousSelectionMenu = lcd_newMenu("Select Auton", 2);
+	programmingSkillsMenu = lcd_newMenu("Prog Skills", 3);
+	endPreAutonMenu = lcd_newMenu("Confirm", 1);
+
+	string batteryVoltage;
+	sprintf(batteryVoltage, "Main: %1.2f%c", nAvgBatteryLevel / 1000.0, 'V');
+	batteryVoltageMenu = lcd_newMenu(batteryVoltage);
+
+	string powerExpanderVoltage;
+	sprintf(powerExpanderVoltage, "Expander: %1.2f%c", SensorValue[powerExpander] / ANALOG_IN_TO_V, 'V');
+	powerExpanderVoltageMenu = lcd_newMenu(powerExpanderVoltage);
+
+	string backupBatteryVoltage;
+	sprintf(backupBatteryVoltage, "Backup: %1.2f%c", BackupBatteryLevel / 1000.0, 'V');
+	backupBatteryVoltageMenu = lcd_newMenu(backupBatteryVoltage);
+
+	lcd_linkMenus(programmingSkillsMenu, autonomousSelectionMenu, endPreAutonMenu, batteryVoltageMenu, powerExpanderVoltageMenu, backupBatteryVoltageMenu);
+
+	bLCDBacklight = true;
+	startTask(lcdControlTask);
+	while (!lcd_getLCDSafetyState() && !endPreAuton) { wait1Msec(50); }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -106,6 +141,8 @@ void pre_auton()
 
 task autonomous()
 {
+	//Call startAutonomous() here
+
 	startTask(ArmClawController);
 	//programmingSkills();
 	//True for left, false for right
@@ -184,5 +221,65 @@ task usercontrol()
 			armTask_ArmState = ARM_DUMPING;
 		}
 		wait1Msec(15);
+	}
+}
+
+//Run an autonomous function based on current selection
+void startAutonomous()
+{
+	//Naming convention: <red side = 1, blue side = 2><left side = 1, right side = 2><primary = 1, secondary = 2, tertiary = 3>
+
+	switch (autonSelection)
+	{
+		case 111:
+			//redLeftAutonPrimary();
+			break;
+
+		case 112:
+			//redLeftAutonSecondary();
+			break;
+
+		case 113:
+			//redLeftAutonTertiary();
+			break;
+
+		case 121:
+			//redRightAutonPrimary();
+			break;
+
+		case 122:
+			//redRightAutonSecondary();
+			break;
+
+		case 123:
+			//redRightAutonTertiary();
+			break;
+
+		case 211:
+			//blueLeftAutonPrimary();
+			break;
+
+		case 212:
+			//blueLeftAutonSecondary();
+			break;
+
+		case 213:
+			//blueLeftAutonTertiary();
+			break;
+
+		case 221:
+			//blueRightAutonPrimary();
+			break;
+
+		case 222:
+			//blueRightAutonSecondary();
+			break;
+
+		case 223:
+			//blueRightAutonTertiary();
+			break;
+
+		default:
+			break;
 	}
 }
