@@ -4,11 +4,12 @@
 //
 // Code for robot arm user control.
 
-#define armRestingSpeed -5
-#define armDownSpeed -75
+#define armRestingSpeed -15
+#define armDownSpeed -127
+#define armManualDownSpeed -75
 #define armUpSpeed 127
 
-bool holding = false;
+bool holding = true;
 //ARM CONTROL SYSTEM
 void userArm(){
 	if(vexRT(Btn5U)){
@@ -16,14 +17,10 @@ void userArm(){
 		holding = false;
 	}
 	else if(vexRT(Btn7D)){
-		setArm(armDownSpeed);
+		setArm(armManualDownSpeed);
 		holding = true;
 	}
 	else {
-		if(holding) {
 			setArm(armRestingSpeed);
-			} else {
-			setArm(0);
-		}
 	}
 }

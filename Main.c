@@ -50,7 +50,7 @@ int autonSelection = -1;
 int middleArmSetpoint = 1000; //Setpoint to hold at for driving around the field
 int highHoldingArmSetpoint = 1325;
 int topArmSetpoint = 3000; //3000 //Setpoint for dumping
-int scoreThreshold = topArmSetpoint - 1500;  //Point at which to open the claw
+int scoreThreshold = topArmSetpoint - 1250; //minus 1500 //Point at which to open the claw
 
 //ARM PID CONSTANTS
 float kP_arm = 0.3, kI_arm = 0, kD_arm = 0;
@@ -73,6 +73,7 @@ float kP_turn = 1.35, kI_turn = 0, kD_turn = 0.2;
 #include "Claw.c" //All control code for the claw.
 #include "PTO.c" //All control for hook release and pto.
 #include "Drive.c" //Basic drive functions.
+#include "SlewDrive.c" //Slew drive functions.
 #include "Arm.c" //Basic arm functions.
 #include "ArmUserControl.c" //User control code for the arm.
 #include "ArmClawController.c"
@@ -80,14 +81,7 @@ float kP_turn = 1.35, kI_turn = 0, kD_turn = 0.2;
 #include "LCDAutonomousSelect.c"
 #include "PID_Drive.c"
 
-//Menus
-//Level 1 - General Info
-menu *programmingSkillsMenu;
-menu *autonomousSelectionMenu;
-menu *endPreAutonMenu;
-menu *batteryVoltageMenu;
-menu *powerExpanderVoltageMenu;
-menu *backupBatteryVoltageMenu;
+
 
 /*---------------------------------------------------------------------------*/
 /*                          Pre-Autonomous Functions                         */
@@ -103,30 +97,6 @@ void pre_auton()
 {
 	bStopTasksBetweenModes = false;
 	resetEncoders();
-
-	//Menu system
-	//Level 1 - General Info
-	autonomousSelectionMenu = lcd_newMenu("Select Auton", 2);
-	programmingSkillsMenu = lcd_newMenu("Prog Skills", 3);
-	endPreAutonMenu = lcd_newMenu("Confirm", 1);
-
-	string batteryVoltage;
-	sprintf(batteryVoltage, "Main: %1.2f%c", nAvgBatteryLevel / 1000.0, 'V');
-	batteryVoltageMenu = lcd_newMenu(batteryVoltage);
-
-	string powerExpanderVoltage;
-	sprintf(powerExpanderVoltage, "Expander: %1.2f%c", SensorValue[powerExpander] / ANALOG_IN_TO_V, 'V');
-	powerExpanderVoltageMenu = lcd_newMenu(powerExpanderVoltage);
-
-	string backupBatteryVoltage;
-	sprintf(backupBatteryVoltage, "Backup: %1.2f%c", BackupBatteryLevel / 1000.0, 'V');
-	backupBatteryVoltageMenu = lcd_newMenu(backupBatteryVoltage);
-
-	lcd_linkMenus(programmingSkillsMenu, autonomousSelectionMenu, endPreAutonMenu, batteryVoltageMenu, powerExpanderVoltageMenu, backupBatteryVoltageMenu);
-
-	bLCDBacklight = true;
-	startTask(lcdControlTask);
-	while (!lcd_getLCDSafetyState() && !endPreAuton) { wait1Msec(50); }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -166,19 +136,14 @@ task autonomous()
 float leftEncoderValue, rightEncoderValue, pot;
 task usercontrol()
 {
-	//Initialize odometry to run off of our left and right quadrature encoders
-	//and assume we start at exactly position (0,0) and rotation 0
-	odom_Initialize(leftEncoder, rightEncoder, 0, 0, 0);
+	// Start motor slew rate control
+  StartTask( MotorSlewRateTask );
 
-	//Guess the scales for our robot. Our wheel base is 17.5 inches and we are
-	//using 4 inch omni wheels. Note: This will never be as good as determining
-	//thse numbers yourself experimentally and calling odometry_SetScales instead
-	odom_SetScales(0.7315, 0.22687);
+  // Start driver control tasks
+  StartTask( ArcadeDrive );
 
-	//Start the odometry task. From this point onward, we are not allowed to
-	//modify the values of the quadrature encoders we passed in earlier
-	//startTask(trackOdometry);
 	startTask(ArmClawController);
+
 	while (true)
 	{
 
@@ -186,7 +151,7 @@ task usercontrol()
 		rightEncoderValue = getRightEncoder();
 
 		/*User drive method*/
-		arcadeDrive();
+		//arcadeDrive();
 		//userClaw();
 		//userArm();
 		//tankDrive();
@@ -227,59 +192,5 @@ task usercontrol()
 //Run an autonomous function based on current selection
 void startAutonomous()
 {
-	//Naming convention: <red side = 1, blue side = 2><left side = 1, right side = 2><primary = 1, secondary = 2, tertiary = 3>
 
-	switch (autonSelection)
-	{
-		case 111:
-			//redLeftAutonPrimary();
-			break;
-
-		case 112:
-			//redLeftAutonSecondary();
-			break;
-
-		case 113:
-			//redLeftAutonTertiary();
-			break;
-
-		case 121:
-			//redRightAutonPrimary();
-			break;
-
-		case 122:
-			//redRightAutonSecondary();
-			break;
-
-		case 123:
-			//redRightAutonTertiary();
-			break;
-
-		case 211:
-			//blueLeftAutonPrimary();
-			break;
-
-		case 212:
-			//blueLeftAutonSecondary();
-			break;
-
-		case 213:
-			//blueLeftAutonTertiary();
-			break;
-
-		case 221:
-			//blueRightAutonPrimary();
-			break;
-
-		case 222:
-			//blueRightAutonSecondary();
-			break;
-
-		case 223:
-			//blueRightAutonTertiary();
-			break;
-
-		default:
-			break;
-	}
 }
