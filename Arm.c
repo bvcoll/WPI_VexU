@@ -25,6 +25,6 @@ void pidArm(int armSetpoint) {
 	pos_PID_SetTargetPosition(&armPID, armSetpoint);
 
 	//Run our motor with the output of the pid controller
-	setArm(pos_PID_StepController(&armPID , SensorValue(armEncoder)));
+	setArm(pos_PID_StepController(&armPID , SensorValue(armPot)));
 	//pidOutput = pos_PID_StepController(&armPID, SensorValue(I2C_1));
 }

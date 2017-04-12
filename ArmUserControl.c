@@ -8,14 +8,14 @@
 #define armDownSpeed -75
 #define armUpSpeed 127
 
-bool holding = true;
+bool holding = false;
 //ARM CONTROL SYSTEM
 void userArm(){
 	if(vexRT(Btn5U)){
 		setArm(armUpSpeed);
 		holding = false;
 	}
-	else if(vexRT(Btn5D)){
+	else if(vexRT(Btn7D)){
 		setArm(armDownSpeed);
 		holding = true;
 	}
