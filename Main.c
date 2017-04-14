@@ -115,7 +115,7 @@ void pre_auton()
 	batteryVoltageMenu = lcd_newMenu(batteryVoltage);
 
 	string powerExpanderVoltage;
-	sprintf(powerExpanderVoltage, "Expander: %1.2f%c", SensorValue[powerExpander] / ANALOG_IN_TO_V, 'V');
+	//sprintf(powerExpanderVoltage, "Expander: %1.2f%c", SensorValue[powerExpander] / ANALOG_IN_TO_V, 'V'); //TODO: Add powerexpander if we're using it
 	powerExpanderVoltageMenu = lcd_newMenu(powerExpanderVoltage);
 
 	string backupBatteryVoltage;
