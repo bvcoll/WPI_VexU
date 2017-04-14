@@ -52,12 +52,6 @@ int highHoldingArmSetpoint = 1325;
 int topArmSetpoint = 3000; //3000 //Setpoint for dumping
 int scoreThreshold = topArmSetpoint - 1250; //minus 1500 //Point at which to open the claw
 
-//ARM PID CONSTANTS
-float kP_arm = 0.3, kI_arm = 0, kD_arm = 0;
-//Drive PID CONSTANTS
-float kP_drive = 4.5, kI_drive = 0, kD_drive = 0;
-//Drive PID CONSTANTS
-float kP_turn = 1.35, kI_turn = 0, kD_turn = 0.2;
 
 //LCD Chooser Defines
 #define LCD_SAFETY_REQ_COMP_SWITCH //prevents waiting for LCD imput blocking driver control when comp switch is plugged in
@@ -71,13 +65,12 @@ float kP_turn = 1.35, kI_turn = 0, kD_turn = 0.2;
 
 //INCLUDES
 #include "Claw.c" //All control code for the claw.
-#include "PTO.c" //All control for hook release and pto.
 #include "Drive.c" //Basic drive functions.
 #include "SlewDrive.c" //Slew drive functions.
 #include "Arm.c" //Basic arm functions.
 #include "ArmUserControl.c" //User control code for the arm.
 #include "ArmClawController.c"
-#include "Auto.c"
+//#include "Auto.c"
 #include "LCDAutonomousSelect.c"
 #include "PID_Drive.c"
 
@@ -98,7 +91,7 @@ void pre_auton()
 	bStopTasksBetweenModes = false;
 	resetEncoders();
 
-
+	/**
 	//Menu system
 	//Level 1 - General Info
 	autonomousSelectionMenu = lcd_newMenu("Select Auton", 2);
@@ -122,6 +115,7 @@ void pre_auton()
 	bLCDBacklight = true;
 	startTask(lcdControlTask);
 	while (!lcd_getLCDSafetyState() && !endPreAuton) { wait1Msec(50); }
+	*/
 
 }
 
@@ -139,10 +133,13 @@ task autonomous()
 {
 	//Call startAutonomous() here
 
+	//START ARM PID
+	initArmPID();
+
 	startTask(ArmClawController);
 	//programmingSkills();
 	//True for left, false for right
-	auton(false);
+	//auton(false);
 	wait1Msec(100000);
 	// ..........................................................................
 	// Insert user code here.
@@ -158,40 +155,55 @@ task autonomous()
 /*                                                                           */
 /*  You must modify the code to add your own robot specific commands here.   */
 /*---------------------------------------------------------------------------*/
-
-float leftEncoderValue, rightEncoderValue, pot;
+int distanceToDrive = 48;
+float leftEncoderValue, rightEncoderValue, pot, gyro, avgEncoderValue;
 task usercontrol()
 {
 	// Start motor slew rate control
-  StartTask( MotorSlewRateTask );
+  //StartTask( MotorSlewRateTask );
 
   // Start driver control tasks
-  StartTask( ArcadeDrive );
+  //StartTask( ArcadeDrive );
 
 	startTask(ArmClawController);
+	startTask(PID_Drive);
 
 	while (true)
 	{
-
+		avgEncoderValue = getAvgEncoder();
 		leftEncoderValue = getLeftEncoder();
 		rightEncoderValue = getRightEncoder();
 
 		/*User drive method*/
 		//arcadeDrive();
+
 		//userClaw();
 		//userArm();
 		//tankDrive();
 
 		if(vexRT(Btn8R)){
 			//programmingSkills();
+			//driveDistance(distanceToDrive); //72
+			turnAngle(90);
 
-			} else {
+		} else if(vexRT(Btn8U)){
+				motor[LD1] = motor[LD2] = motor[LD3] = 100; //Set motor values
+				motor[RD1] = motor[RD2] = motor[RD3] = 100;
+					//motor(RD1) = 100;
+		}	else {
 			//arcadeDrive();
 			//tankDrive();
 		}
 
+		if(vexRT(Btn5U)){
+			arcadeDrive();
+		}
+
 		if(vexRT(Btn8L)){
 			resetEncoders();
+			isTurning = false;
+			isDriving = false;
+
 		}
 
 		gyro = getGyro();

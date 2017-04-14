@@ -7,24 +7,57 @@ int maxspeed = MAX_VOLTAGE;
 
 #define ANG_CONST 123 //TODO: Add actual tuned values
 
-int driveErrorThreshold = 5;
-int turnErrorThreshold = 5;
+int driveErrorThreshold = 1;
+int turnErrorThreshold = 1;
 
 //Linear variables
-int disterror, differror, distintegral, diffintegral, distderivative, diffderivative, distspeed, diffspeed, prevdisterror, prevdifferror = 0;
+float disterror, differror, distintegral, diffintegral,  distspeed, diffspeed, direction = 0;
+float distderivative, diffderivative, prevdisterror, prevdifferror = 0;
 
 //PLACEHOLDER VALUES LINEAR DRIVE
-float distP = .5;
-float distI = 0.025;
-float distD = 0.2;
+float distP = 13;
+float distI = 0.1;
+float distD = 125; //.2
 //PLACEHOLDER VALUES STEADY DRIVE
-float diffP = 1;
+float diffP = 5;
 float diffI = 0.05;
 float diffD = 0.2;
+//PLACEHOLDER VALUES STEADY DRIVE
+float turnP = 10;
+float turnI = 0.05;
+float turnD = 65;
+
+float BSScalingFactor = 1;
+float getLeftEncoder() {
+	return ((float)SensorValue(leftEncoder) / 360.0) * 3.25 * PI * BSScalingFactor;
+}
+
+float getRightEncoder() {
+	return ((float)SensorValue(rightEncoder) / 360.0) * 3.25 * PI * BSScalingFactor;
+}
+
+float getGyro(){
+	return (SensorValue(leftEncoder) - SensorValue(rightEncoder)) / 6.74;  //8.92 //TODO: Tune gyro scale
+}
+
+float getAvgEncoder(){
+	return (getRightEncoder() + getLeftEncoder()) /2 ;
+}
+
+void resetEncoders() {
+	SensorValue(leftEncoder) = 0;
+	SensorValue(rightEncoder) = 0;
+}
+
+void autoTurn(int voltage) {
+	motor(LD1) = motor(LD2) = motor(LD3) = voltage;
+	motor(RD1)  = motor(RD2) = motor(RD3) = -voltage;
+}
 
 //////////////////////////////////////////////////////////* DRIVE PID TASK *//////////////////////////////////////////////////////////////////
 task PID_Drive(){
 	while(true){
+
 
 		//Executes once when isDriving or isTurning is flipped true.
 		if(isDriving || isTurning){
@@ -38,21 +71,14 @@ task PID_Drive(){
 		//Runs the PID loop while isDriving is true and sets isDriving to false when done.
 		while(isDriving){
 			// Calculate both linear and difference errors
-			disterror = linearDistance - ((SensorValue(leftEncoder) + SensorValue(rightEncoder))/2); //Calculate distance error
-			differror = SensorValue(leftEncoder) - SensorValue(rightEncoder); //Calculate difference error
+			disterror = linearDistance - getAvgEncoder(); //Calculate distance error
+			differror = getGyro(); //Calculate difference error
 
 			// Find the integral ONLY if within controllable range AND if the distance error is not equal to zero
-			if( abs(disterror) < 60 && disterror != 0){
+			if(abs(distderivative) < 0.375 && disterror != 0){
 				distintegral = distintegral + disterror;
 				}else{
 				distintegral = 0; //Otherwise, reset the integral
-			}
-
-			// Find the integral ONLY if within controllable range AND if the difference error is not equal to zero
-			if(abs(differror) < 60 && differror != 0){
-				diffintegral = diffintegral + differror;
-				}else{
-				diffintegral = 0; //Otherwise, reset the integral
 			}
 
 			distderivative = disterror - prevdisterror; //Calculate distance derivative
@@ -77,9 +103,22 @@ task PID_Drive(){
 			motor[LD1] = motor[LD2] = motor[LD3] = distspeed - diffspeed; //Set motor values
 			motor[RD1] = motor[RD2] = motor[RD3] = distspeed + diffspeed; //Set motor values
 
-			if(disterror<driveErrorThreshold){
-				isDriving = false;
-				linearDistance = 0;
+			if(distspeed > 0){
+				direction = 1;
+				} else {
+				direction = -1;
+			}
+
+			if(abs(disterror)<driveErrorThreshold){
+				motor[LD1] = motor[LD2] = motor[LD3] = (15 * -direction);
+				motor[RD1] = motor[RD2] = motor[RD3] = (15 * -direction);
+				wait1Msec(100);
+				if(abs(distderivative) < 0.5){
+					isDriving = false;
+					linearDistance = 0;
+					motor[LD1] = motor[LD2] = motor[LD3] = 0;
+					motor[RD1] = motor[RD2] = motor[RD3] = 0;
+				}
 			}
 			wait1Msec(20);
 		}
@@ -87,22 +126,16 @@ task PID_Drive(){
 		//Runs the PID loop while isTurning is true and sets isTurning to false when done. Turns to the right by default for positive values.
 		while(isTurning){
 
-			disterror = turnAng*ANG_CONST - ((SensorValue(leftEncoder) + -1*SensorValue(rightEncoder))/2); //Calculate distance error
-			differror = SensorValue(leftEncoder) - -1*SensorValue(rightEncoder); //Calculate difference error
+			disterror = turnAng - getGyro(); //Calculate distance error
+			//differror = getLeftEncoder() - -1*getRightEncoder(); //Calculate difference error
 
 			// Find the integral ONLY if within controllable range AND if the distance error is not equal to zero
-			if( abs(disterror) < 60 && disterror != 0){
+			if( abs(disterror) < 6 && disterror != 0){
 				distintegral = distintegral + disterror;
 				}else{
 				distintegral = 0; //Otherwise, reset the integral
 			}
 
-			// Find the integral ONLY if within controllable range AND if the difference error is not equal to zero
-			if(abs(differror) < 60 && differror != 0){
-				diffintegral = diffintegral + differror;
-				}else{
-				diffintegral = 0; //Otherwise, reset the integral
-			}
 
 			distderivative = disterror - prevdisterror; //Calculate distance derivative
 			diffderivative = differror - prevdifferror; //Calculate difference derivative
@@ -110,8 +143,9 @@ task PID_Drive(){
 			prevdisterror = disterror; //Update previous distance error
 			prevdifferror = differror; //Update previous difference error
 
-			distspeed = (disterror * distP) + (distintegral * distI) + (distderivative * distD); //Calculate distance speed
-			diffspeed = (differror * diffP) + (diffintegral * diffI) + (diffderivative* diffD); //Calculate difference (turn) speed
+			distspeed = (disterror * turnP) + (distintegral * turnI) + (distderivative * turnD); //Calculate distance speed
+			//diffspeed = (differror * diffP) + (diffintegral * diffI) + (diffderivative* diffD); //Calculate difference (turn) speed
+			diffspeed = 0; //TODO: Consider implementing this
 
 			//Check that the speed is not exceeding the maximum set speed
 			if(distspeed > maxspeed){
@@ -126,9 +160,21 @@ task PID_Drive(){
 			motor[LD1] = motor[LD2] = motor[LD3] = distspeed - diffspeed; //Set motor values
 			motor[RD1] = motor[RD2] = motor[RD3] = -1*(distspeed + diffspeed); //Set motor values
 
-			if(disterror<turnErrorThreshold){
-				isTurning = false;
-				turnAng = 0;
+			if(distspeed > 0){
+				direction = 1;
+				} else {
+				direction = -1;
+			}
+
+			if(abs(disterror)<turnErrorThreshold){
+				autoTurn(15 * -direction);
+				wait1Msec(100);
+				if(abs(distderivative) < 0.5){
+					isTurning = false;
+					turnAng = 0;
+					motor[LD1] = motor[LD2] = motor[LD3] = 0;
+					motor[RD1] = motor[RD2] = motor[RD3] = 0;
+				}
 			}
 			wait1Msec(20);
 		}
@@ -138,13 +184,16 @@ task PID_Drive(){
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void driveDist(float dist){
+void driveDistance(float dist){
 	linearDistance = dist;
 	isDriving = true;
+	//while(isDriving){
+	//	wait1Msec(20);
+	//}
 }
 
 void turnAngle(float ang){
-	linearDistance = turnAng;
+	turnAng = ang;
 	isTurning = true;
 }
 
