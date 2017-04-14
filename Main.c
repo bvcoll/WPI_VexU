@@ -97,6 +97,32 @@ void pre_auton()
 {
 	bStopTasksBetweenModes = false;
 	resetEncoders();
+
+
+	//Menu system
+	//Level 1 - General Info
+	autonomousSelectionMenu = lcd_newMenu("Select Auton", 2);
+	programmingSkillsMenu = lcd_newMenu("Prog Skills", 3);
+	endPreAutonMenu = lcd_newMenu("Confirm", 1);
+
+	string batteryVoltage;
+	sprintf(batteryVoltage, "Main: %1.2f%c", nAvgBatteryLevel / 1000.0, 'V');
+	batteryVoltageMenu = lcd_newMenu(batteryVoltage);
+
+	string powerExpanderVoltage;
+	//sprintf(powerExpanderVoltage, "Expander: %1.2f%c", SensorValue[powerExpander] / ANALOG_IN_TO_V, 'V'); //TODO: Add powerexpander if we're using it
+	powerExpanderVoltageMenu = lcd_newMenu(powerExpanderVoltage);
+
+	string backupBatteryVoltage;
+	sprintf(backupBatteryVoltage, "Backup: %1.2f%c", BackupBatteryLevel / 1000.0, 'V');
+	backupBatteryVoltageMenu = lcd_newMenu(backupBatteryVoltage);
+
+	lcd_linkMenus(programmingSkillsMenu, autonomousSelectionMenu, endPreAutonMenu, batteryVoltageMenu, powerExpanderVoltageMenu, backupBatteryVoltageMenu);
+
+	bLCDBacklight = true;
+	startTask(lcdControlTask);
+	while (!lcd_getLCDSafetyState() && !endPreAuton) { wait1Msec(50); }
+
 }
 
 /*---------------------------------------------------------------------------*/

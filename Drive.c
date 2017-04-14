@@ -52,7 +52,7 @@ void rightDrive(int voltage){
 	motor(RD1)  = motor(RD2) = motor(RD3) = removeDeadband(voltage);
 }
 
-int leftValue, rightValue
+int leftValue, rightValue;
 //ARCADE DRIVE SYSTEM
 void arcadeDrive(){
 	if(vexRT(Btn5D)){
