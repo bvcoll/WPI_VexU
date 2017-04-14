@@ -16,8 +16,12 @@ void userArm(){
 		setArm(armUpSpeed);
 		holding = false;
 	}
-	else if(vexRT(Btn7D)){
+	else if(vexRT(Btn5D)){
 		setArm(armManualDownSpeed);
+		holding = true;
+	}
+	else if(vexRT(Btn7D)){
+		setArm(-127);
 		holding = true;
 	}
 	else {

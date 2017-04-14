@@ -176,7 +176,7 @@ task usercontrol()
 		if (vexRT(Btn7R)) {
 			armTask_ArmState = ARM_HIGH_HOLDING;
 		}
-		if (vexRT(Btn7D) || vexRT(Btn5U)) {
+		if (vexRT(Btn5D) || vexRT(Btn5U)|| vexRT(Btn7U)) {
 			armTask_ArmState = ARM_USER;
 		}
 		if(vexRT(Btn6D)) {
