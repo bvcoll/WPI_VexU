@@ -13,55 +13,54 @@ int turnErrorThreshold = 1;
 //Linear variables
 float disterror, differror, distintegral, diffintegral,  distspeed, diffspeed, direction = 0;
 float distderivative, diffderivative, prevdisterror, prevdifferror = 0;
+bool hitWall = false;
+int lastLatched, startingTime, wallTime = 0;
 
-//PLACEHOLDER VALUES LINEAR DRIVE
+//LINEAR DRIVE GAINS
 float distP = 13;
 float distI = 0.1;
 float distD = 125; //.2
-//PLACEHOLDER VALUES STEADY DRIVE
+//STEADY DRIVE GAINS
 float diffP = 5;
 float diffI = 0.05;
 float diffD = 0.2;
-//PLACEHOLDER VALUES STEADY DRIVE
+//TURN GAINS
 float turnP = 10;
 float turnI = 0.05;
 float turnD = 65;
 
-float BSScalingFactor = 1;
+//Return value of left encoder in inches
 float getLeftEncoder() {
-	return ((float)SensorValue(leftEncoder) / 360.0) * 3.25 * PI * BSScalingFactor;
+	return ((float)SensorValue(leftEncoder) / 360.0) * 3.25 * PI;
 }
-
+//Return value of right encoder in inches
 float getRightEncoder() {
-	return ((float)SensorValue(rightEncoder) / 360.0) * 3.25 * PI * BSScalingFactor;
+	return ((float)SensorValue(rightEncoder) / 360.0) * 3.25 * PI;
 }
-
-float getGyro(){
-	return (SensorValue(leftEncoder) - SensorValue(rightEncoder)) / 6.74;
-}
-
+//Return average value of encoders in inches
 float getAvgEncoder(){
 	return (getRightEncoder() + getLeftEncoder()) /2 ;
 }
-
+//Return angle from difference in encoders
+float getGyro(){
+	return (SensorValue(leftEncoder) - SensorValue(rightEncoder)) / 6.74;
+}
+//Reset both encoders to 0
 void resetEncoders() {
 	SensorValue(leftEncoder) = 0;
 	SensorValue(rightEncoder) = 0;
 }
-
+//Turns robot at specific voltage
 void autoTurn(int voltage) {
 	motor(LD1) = motor(LD2) = motor(LD3) = voltage;
 	motor(RD1)  = motor(RD2) = motor(RD3) = -voltage;
 }
-bool hitWall = false;
-int lastLatched, startingTime, wallTime = 0;
 
 //////////////////////////////////////////////////////////* DRIVE PID TASK *//////////////////////////////////////////////////////////////////
 task PID_Drive(){
 	while(true){
 
-
-		//Executes once when isDriving or isTurning is flipped true.
+		//Executes once when isDriving or isTurning or isWall is flipped true.
 		if(isDriving || isTurning || isWall){
 			resetEncoders();
 			prevdisterror = 0;
@@ -72,6 +71,7 @@ task PID_Drive(){
 			hitWall = false;
 		}
 
+		//Calculate starting time for wall function
 		startingTime = nPgmTime + wallTime;
 
 		//Runs the PID loop while isDriving is true and sets isDriving to false when done.
@@ -109,17 +109,19 @@ task PID_Drive(){
 			motor[LD1] = motor[LD2] = motor[LD3] = distspeed - diffspeed; //Set motor values
 			motor[RD1] = motor[RD2] = motor[RD3] = distspeed + diffspeed; //Set motor values
 
+			//Find sign of output
 			if(distspeed > 0){
 				direction = 1;
 				} else {
 				direction = -1;
 			}
 
+			//If close to range apply negative voltage to stop robot
 			if(abs(disterror)<driveErrorThreshold){
 				motor[LD1] = motor[LD2] = motor[LD3] = (15 * -direction);
 				motor[RD1] = motor[RD2] = motor[RD3] = (15 * -direction);
 				wait1Msec(100);
-				if(abs(distderivative) < 0.5){
+				if(abs(distderivative) < 0.5){ //Once you stop moving reset
 					isDriving = false;
 					linearDistance = 0;
 					motor[LD1] = motor[LD2] = motor[LD3] = 0;
@@ -141,7 +143,6 @@ task PID_Drive(){
 				}else{
 				distintegral = 0; //Otherwise, reset the integral
 			}
-
 
 			distderivative = disterror - prevdisterror; //Calculate distance derivative
 			diffderivative = differror - prevdifferror; //Calculate difference derivative
@@ -166,16 +167,18 @@ task PID_Drive(){
 			motor[LD1] = motor[LD2] = motor[LD3] = distspeed - diffspeed; //Set motor values
 			motor[RD1] = motor[RD2] = motor[RD3] = -1*(distspeed + diffspeed); //Set motor values
 
+			//Find direction of output
 			if(distspeed > 0){
 				direction = 1;
 				} else {
 				direction = -1;
 			}
 
+			//If close to range apply negative voltage to stop robot
 			if(abs(disterror)<turnErrorThreshold){
 				autoTurn(15 * -direction);
 				wait1Msec(100);
-				if(abs(distderivative) < 0.5){
+				if(abs(distderivative) < 0.5){ //Once you stop moving reset
 					isTurning = false;
 					turnAng = 0;
 					motor[LD1] = motor[LD2] = motor[LD3] = 0;
@@ -199,6 +202,8 @@ task PID_Drive(){
 			motor[LD1] = motor[LD2] = motor[LD3] = -100 - diffspeed; //Set motor values
 			motor[RD1] = motor[RD2] = motor[RD3] = -100 + diffspeed; //Set motor values
 
+			//When derivative error is less than certain value begin latching
+			//If latched for more than certain time set hitWall to true
 			if(abs(distderivative) > 0.2){
 				lastLatched = nPgmTime;
 				hitWall = false;
@@ -206,6 +211,7 @@ task PID_Drive(){
 				hitWall =  nPgmTime - lastLatched > 500;
 			}
 
+			//If hitWall and beginning time has passed stop motors and reset
 			if(startingTime < nPgmTime && hitWall){
 				motor[LD1] = motor[LD2] = motor[LD3] = 0;
 				motor[RD1] = motor[RD2] = motor[RD3] = 0;
@@ -220,6 +226,7 @@ task PID_Drive(){
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+//Drives given distance in inches
 void driveDistance(float dist){
 	linearDistance = dist;
 	isDriving = true;
@@ -227,7 +234,7 @@ void driveDistance(float dist){
 		wait1Msec(20);
 	}
 }
-
+//Turns given angle in degrees (right = +)
 void turnAngle(float ang){
 	turnAng = ang;
 	isTurning = true;
@@ -235,7 +242,7 @@ void turnAngle(float ang){
 		wait1Msec(20);
 	}
 }
-
+//Drives into wall begining to sense lack of movement after given time
 void driveWall(int time){
 	wallTime = time;
 	isWall = true;
@@ -244,8 +251,7 @@ void driveWall(int time){
 	}
 }
 
-
-//TODO: Add arm functions.
+//Sequence of events for dumping objects
 void dump(){
 	armTask_ArmState = ARM_HOLDING;
 	delay(500);
