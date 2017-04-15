@@ -1,4 +1,3 @@
-
 #pragma config(Sensor, in1,    armPot,         sensorPotentiometer)
 #pragma config(Sensor, dgtl1,  rightEncoder,   sensorQuadEncoder)
 #pragma config(Sensor, dgtl3,  leftEncoder,    sensorQuadEncoder)
@@ -44,7 +43,7 @@ bool endPreAuton = false;
 //The autonomous program to run
 int autonSelection = -1;
 
-int middleArmSetpoint = 1000; //Setpoint to hold at for driving around the field
+int middleArmSetpoint = 1200; //Setpoint to hold at for driving around the field
 int highHoldingArmSetpoint = 1500;
 int topArmSetpoint = 3000; //3000 //Setpoint for dumping
 int scoreThreshold = topArmSetpoint - 1250; //minus 1500 //Point at which to open the claw
@@ -66,10 +65,10 @@ int scoreThreshold = topArmSetpoint - 1250; //minus 1500 //Point at which to ope
 #include "Arm.c" //Basic arm functions.
 #include "ArmUserControl.c" //User control code for the arm.
 #include "ArmClawController.c"
-#include "LCDAutonomousSelect.c"
 #include "PID_Drive.c"
 #include "Drive.c" //Basic drive functions.
 #include "Auto.c"
+#include "LCDAutonomousSelect.c"
 
 
 /*---------------------------------------------------------------------------*/
@@ -151,6 +150,10 @@ int distanceToDrive = 48;
 float leftEncoderValue, rightEncoderValue, pot, gyro, avgEncoderValue;
 task usercontrol()
 {
+	if (sensorValue[clawSolenoid]==1){
+		openClaw();
+	}
+
 	// Start motor slew rate control
 	//StartTask( MotorSlewRateTask );
 
@@ -179,7 +182,7 @@ task usercontrol()
 		}
 
 		if(vexRT(Btn8U) && !lastBegan){
-			dump();
+			programmingSkills();
 			//driveWall(1000);
 		}
 

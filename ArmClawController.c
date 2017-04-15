@@ -94,3 +94,17 @@ task ArmClawController()
 		wait1Msec(20);
 	}
 }
+
+void hover(bool isHigh = 0){
+	if(isHigh){
+		armTask_ArmState = ARM_HIGH_HOLDING;
+	}
+	else{
+		armTask_ArmState = ARM_HOLDING;
+	}
+}
+
+void lowerArm(){
+	openClaw();
+	armTask_ArmState = ARM_RESET;
+}

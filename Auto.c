@@ -104,12 +104,6 @@ void clearUnderBar(){
 	turnAngle(90);
 }
 
-void programmingSkills(){
-	auto_score();
-	clearUnderBar();
-	auto_climb();
-}
-
 void auton(bool isLeft){
 	// 1 for red, -1 for blue
 	int dir = 2 * isLeft - 1;
@@ -146,4 +140,124 @@ void auton(bool isLeft){
 	driveDistance(-12);
 	armTask_ArmState = ARM_DUMPING;
 	driveIntoWall(1800,-100);
+}
+
+void preloads(){
+	driveDistance(-24);
+	openClaw();
+	wait1Msec(400);
+	driveDistance(4);
+	wait1Msec(500);
+	dump();
+	driveDistance(32);
+	wait1Msec(500);
+	dump();
+	driveDistance(32);
+	wait1Msec(500);
+	dump();
+}
+
+void getCornerStars(bool isLeft){
+	int dir = 2*isLeft - 1;
+	driveDistance(32);
+	turnAngle(135*dir);
+	driveDistance(12);
+	hover();
+	turnAngle(-115*dir);
+	driveDistance(12);
+	hover();
+	turnAngle(-20*dir);
+	dump();
+}
+
+
+void programmingSkills(){
+	//preloads();
+	//driveDistance(26); // old 30
+	//turnAngle(-90);
+	//driveIntoWall(1000);
+
+	/*
+  //drive to get cube
+	driveDistance(42);
+	armTask_ArmState = ARM_HIGH_HOLDING;
+	driveDistance(48); // old 36
+	turnAngle(90);
+	dump(true);
+	driveWall(1000,100);
+	dump();
+	*/
+
+	//Cross field to get starts by fense
+	driveDistance(15);
+	turnAngle(88);
+	driveDistance(-10);
+	driveDistance(40);
+	closeClaw();
+	delay(250);
+	driveDistance(24);
+	openClaw();
+	turnAngle(-15);
+	driveWall(500,100);
+
+	//Pick up starts and dump
+	closeClaw();
+	delay(750);
+	driveDistance(-12);
+	armTask_ArmState = ARM_HIGH_HOLDING;
+	delay(500);
+	driveDistance(14);
+	turnAngle(-90);
+	driveWall(100);
+	armTask_ArmState = ARM_DUMPING;
+	delay(1500);
+
+
+	//Drive forward and pick up corner star
+	driveWall(1500,100);
+	turnAngle(-45);
+	driveDistance(10);
+	turnAngle(-45);
+	driveDistance(72);
+	driveWall(500,100);
+	closeClaw();
+}
+
+void oldBS(){
+
+
+	//Cross field to get starts by fense
+	driveDistance(15);
+	turnAngle(88);
+	driveDistance(-10);
+	driveDistance(40);
+	closeClaw();
+	delay(250);
+	driveDistance(24);
+	openClaw();
+	turnAngle(-15);
+	driveWall(500,100);
+
+	//Pick up starts and dump
+	closeClaw();
+	delay(750);
+	driveDistance(-12);
+	armTask_ArmState = ARM_HIGH_HOLDING;
+	delay(500);
+	driveDistance(14);
+	turnAngle(-90);
+	driveWall(100);
+	armTask_ArmState = ARM_DUMPING;
+	delay(1500);
+
+
+	//Drive forward and pick up corner star
+	driveWall(1500,100);
+	turnAngle(-45);
+	driveDistance(10);
+	turnAngle(-45);
+	driveDistance(72);
+	driveWall(500,100);
+	closeClaw();
+
 }

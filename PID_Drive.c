@@ -2,6 +2,7 @@
 bool isDriving = false;
 bool isTurning = false;
 bool isWall = false;
+int wallPower = -100;
 float linearDistance = 0;
 float turnAng = 0;
 int maxspeed = MAX_VOLTAGE;
@@ -17,17 +18,17 @@ bool hitWall = false;
 int lastLatched, startingTime, wallTime = 0;
 
 //LINEAR DRIVE GAINS
-float distP = 13;
-float distI = 0.1;
+float distP = 14;
+float distI = 0.12;
 float distD = 125; //.2
 //STEADY DRIVE GAINS
-float diffP = 5;
+float diffP = 8;   //OLD 5
 float diffI = 0.05;
 float diffD = 0.2;
 //TURN GAINS
 float turnP = 10;
-float turnI = 0.05;
-float turnD = 65;
+float turnI = 0.1; //OLD 0.05
+float turnD = 67;
 
 //Return value of left encoder in inches
 float getLeftEncoder() {
@@ -56,23 +57,38 @@ void autoTurn(int voltage) {
 	motor(RD1)  = motor(RD2) = motor(RD3) = -voltage;
 }
 
+void initPID(){
+	resetEncoders();
+	prevdisterror = 0;
+	prevdifferror = 0;
+	distintegral = 0;
+	diffintegral = 0;
+	lastLatched = nPgmTime;
+	hitWall = false;
+	startingTime = nPgmTime + wallTime;
+
+}
+
 //////////////////////////////////////////////////////////* DRIVE PID TASK *//////////////////////////////////////////////////////////////////
 task PID_Drive(){
 	while(true){
 
+		/*
 		//Executes once when isDriving or isTurning or isWall is flipped true.
 		if(isDriving || isTurning || isWall){
-			resetEncoders();
-			prevdisterror = 0;
-			prevdifferror = 0;
-			distintegral = 0;
-			diffintegral = 0;
-			lastLatched = 0;
-			hitWall = false;
+		resetEncoders();
+		prevdisterror = 0;
+		prevdifferror = 0;
+		distintegral = 0;
+		diffintegral = 0;
+		lastLatched = 0;
+		hitWall = false;
 		}
 
 		//Calculate starting time for wall function
 		startingTime = nPgmTime + wallTime;
+
+		*/
 
 		//Runs the PID loop while isDriving is true and sets isDriving to false when done.
 		while(isDriving){
@@ -199,8 +215,8 @@ task PID_Drive(){
 
 			diffspeed = (differror * diffP) + (diffintegral * diffI) + (diffderivative* diffD); //Calculate difference (turn) speed
 
-			motor[LD1] = motor[LD2] = motor[LD3] = -100 - diffspeed; //Set motor values
-			motor[RD1] = motor[RD2] = motor[RD3] = -100 + diffspeed; //Set motor values
+			motor[LD1] = motor[LD2] = motor[LD3] = wallPower - diffspeed; //Set motor values
+			motor[RD1] = motor[RD2] = motor[RD3] = wallPower + diffspeed; //Set motor values
 
 			//When derivative error is less than certain value begin latching
 			//If latched for more than certain time set hitWall to true
@@ -228,6 +244,7 @@ task PID_Drive(){
 
 //Drives given distance in inches
 void driveDistance(float dist){
+	initPID();
 	linearDistance = dist;
 	isDriving = true;
 	while(isDriving){
@@ -236,6 +253,7 @@ void driveDistance(float dist){
 }
 //Turns given angle in degrees (right = +)
 void turnAngle(float ang){
+	initPID();
 	turnAng = ang;
 	isTurning = true;
 	while(isTurning){
@@ -243,7 +261,9 @@ void turnAngle(float ang){
 	}
 }
 //Drives into wall begining to sense lack of movement after given time
-void driveWall(int time){
+void driveWall(int time, int power = -100){
+	initPID();
+	wallPower = power;
 	wallTime = time;
 	isWall = true;
 	while(isWall){
@@ -252,12 +272,16 @@ void driveWall(int time){
 }
 
 //Sequence of events for dumping objects
-void dump(){
-	armTask_ArmState = ARM_HOLDING;
-	delay(500);
+void dump(bool high = false){
+	if(high){
+		armTask_ArmState = ARM_HIGH_HOLDING;
+		} else {
+		armTask_ArmState = ARM_HOLDING;
+	}
+	delay(1000);
 	motor[LD1] = motor[LD2] = motor[LD3] = -100;
 	motor[RD1] = motor[RD2] = motor[RD3] = -100;
-	delay(500);
+	delay(400);
 	armTask_ArmState = ARM_DUMPING;
 	driveWall(1000);
 }
