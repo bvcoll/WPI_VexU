@@ -48,7 +48,7 @@ bool endPreAuton = false;
 int autonSelection = -1;
 
 int middleArmSetpoint = 1000; //Setpoint to hold at for driving around the field
-int highHoldingArmSetpoint = 1325;
+int highHoldingArmSetpoint = 1500;
 int topArmSetpoint = 3000; //3000 //Setpoint for dumping
 int scoreThreshold = topArmSetpoint - 1250; //minus 1500 //Point at which to open the claw
 
@@ -65,14 +65,15 @@ int scoreThreshold = topArmSetpoint - 1250; //minus 1500 //Point at which to ope
 
 //INCLUDES
 #include "Claw.c" //All control code for the claw.
-#include "Drive.c" //Basic drive functions.
 #include "SlewDrive.c" //Slew drive functions.
 #include "Arm.c" //Basic arm functions.
 #include "ArmUserControl.c" //User control code for the arm.
 #include "ArmClawController.c"
-//#include "Auto.c"
 #include "LCDAutonomousSelect.c"
 #include "PID_Drive.c"
+#include "Drive.c" //Basic drive functions.
+#include "Auto.c"
+
 
 
 
@@ -133,11 +134,11 @@ task autonomous()
 {
 	//Call startAutonomous() here
 
-	//START ARM PID
-	initArmPID();
 
+
+	startTask(PID_Drive);
 	startTask(ArmClawController);
-	//programmingSkills();
+	programmingSkills();
 	//True for left, false for right
 	//auton(false);
 	wait1Msec(100000);
@@ -155,15 +156,19 @@ task autonomous()
 /*                                                                           */
 /*  You must modify the code to add your own robot specific commands here.   */
 /*---------------------------------------------------------------------------*/
+bool lastBegan = false;
 int distanceToDrive = 48;
 float leftEncoderValue, rightEncoderValue, pot, gyro, avgEncoderValue;
 task usercontrol()
 {
 	// Start motor slew rate control
-  //StartTask( MotorSlewRateTask );
+	//StartTask( MotorSlewRateTask );
 
-  // Start driver control tasks
-  //StartTask( ArcadeDrive );
+	// Start driver control tasks
+	//StartTask( ArcadeDrive );
+
+	//START ARM PID
+	initArmPID();
 
 	startTask(ArmClawController);
 	startTask(PID_Drive);
@@ -181,23 +186,22 @@ task usercontrol()
 		//userArm();
 		//tankDrive();
 
+		if(vexRT(Btn5U)){
+			arcadeDrive();
+	}
+
 		if(vexRT(Btn8R)){
 			//programmingSkills();
 			//driveDistance(distanceToDrive); //72
 			turnAngle(90);
+			}
+			if(vexRT(Btn8U) && !lastBegan){
+			dump();
+			//driveWall(1000);
+			}
 
-		} else if(vexRT(Btn8U)){
-				motor[LD1] = motor[LD2] = motor[LD3] = 100; //Set motor values
-				motor[RD1] = motor[RD2] = motor[RD3] = 100;
-					//motor(RD1) = 100;
-		}	else {
-			//arcadeDrive();
-			//tankDrive();
-		}
+			lastBegan = vexRT(Btn8U);
 
-		if(vexRT(Btn5U)){
-			arcadeDrive();
-		}
 
 		if(vexRT(Btn8L)){
 			resetEncoders();

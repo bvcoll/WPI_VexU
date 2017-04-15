@@ -69,15 +69,15 @@ void auto_climb(){
 	//Turn to bar
 	turnAngle(-53);
 
-	releaseHook();
+	//releaseHook();
 	wait1Msec(2000);
 	driveIntoWall(2900);
 	armTask_ArmState = ARM_HOLDING;
 	wait1Msec(1000);
-	engagePTO();
+	//engagePTO();
 	driveIntoWall(6300, -127);
-	lockPTO();
-	resetHook();
+	//lockPTO();
+	//resetHook();
 }
 
 void clearUnderBar(){

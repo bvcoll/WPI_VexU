@@ -91,6 +91,6 @@ task ArmClawController()
 		}
 
 		//Task wait
-		wait1Msec(15);
+		wait1Msec(20);
 	}
 }

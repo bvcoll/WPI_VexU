@@ -58,12 +58,15 @@ void autoDrive(int voltage) {
 
 void driveIntoWall(int time, int power=-65){
 	resetEncoders();
-	autoDrive(power);
+	motor(LD1) = motor(LD2) = motor(LD3) = power;
+	motor(RD1)  = motor(RD2) = motor(RD3) = power;
 	while(time>0){
-		autoDrive(power);
+		motor(LD1) = motor(LD2) = motor(LD3) = power;
+		motor(RD1)  = motor(RD2) = motor(RD3) = power;
 		time-=20;
 		wait1Msec(20);
 	}
 	//wait1Msec(time);
-	autoDrive(0);
+	motor(LD1) = motor(LD2) = motor(LD3) = 0;
+	motor(RD1)  = motor(RD2) = motor(RD3) = 0;
 }

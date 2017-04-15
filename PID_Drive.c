@@ -1,11 +1,11 @@
 //Drive control vars
 bool isDriving = false;
 bool isTurning = false;
+bool isWall = false;
 float linearDistance = 0;
 float turnAng = 0;
 int maxspeed = MAX_VOLTAGE;
 
-#define ANG_CONST 123 //TODO: Add actual tuned values
 
 int driveErrorThreshold = 1;
 int turnErrorThreshold = 1;
@@ -37,7 +37,7 @@ float getRightEncoder() {
 }
 
 float getGyro(){
-	return (SensorValue(leftEncoder) - SensorValue(rightEncoder)) / 6.74;  //8.92 //TODO: Tune gyro scale
+	return (SensorValue(leftEncoder) - SensorValue(rightEncoder)) / 6.74;
 }
 
 float getAvgEncoder(){
@@ -53,6 +53,8 @@ void autoTurn(int voltage) {
 	motor(LD1) = motor(LD2) = motor(LD3) = voltage;
 	motor(RD1)  = motor(RD2) = motor(RD3) = -voltage;
 }
+bool hitWall = false;
+int lastLatched, startingTime, wallTime = 0;
 
 //////////////////////////////////////////////////////////* DRIVE PID TASK *//////////////////////////////////////////////////////////////////
 task PID_Drive(){
@@ -60,13 +62,17 @@ task PID_Drive(){
 
 
 		//Executes once when isDriving or isTurning is flipped true.
-		if(isDriving || isTurning){
+		if(isDriving || isTurning || isWall){
 			resetEncoders();
 			prevdisterror = 0;
 			prevdifferror = 0;
 			distintegral = 0;
 			diffintegral = 0;
+			lastLatched = 0;
+			hitWall = false;
 		}
+
+		startingTime = nPgmTime + wallTime;
 
 		//Runs the PID loop while isDriving is true and sets isDriving to false when done.
 		while(isDriving){
@@ -178,6 +184,36 @@ task PID_Drive(){
 			}
 			wait1Msec(20);
 		}
+		while(isWall){
+			disterror = getAvgEncoder();
+			differror = getGyro(); //Calculate difference error
+
+			distderivative = disterror - prevdisterror; //Calculate distance derivative
+			diffderivative = differror - prevdifferror; //Calculate difference derivative
+
+			prevdisterror = disterror; //Update previous distance error
+			prevdifferror = differror; //Update previous difference error
+
+			diffspeed = (differror * diffP) + (diffintegral * diffI) + (diffderivative* diffD); //Calculate difference (turn) speed
+
+			motor[LD1] = motor[LD2] = motor[LD3] = -100 - diffspeed; //Set motor values
+			motor[RD1] = motor[RD2] = motor[RD3] = -100 + diffspeed; //Set motor values
+
+			if(abs(distderivative) > 0.2){
+				lastLatched = nPgmTime;
+				hitWall = false;
+				} else {
+				hitWall =  nPgmTime - lastLatched > 500;
+			}
+
+			if(startingTime < nPgmTime && hitWall){
+				motor[LD1] = motor[LD2] = motor[LD3] = 0;
+				motor[RD1] = motor[RD2] = motor[RD3] = 0;
+				isWall = false;
+			}
+
+			wait1Msec(20);
+		}
 
 		wait1Msec(20);
 	}
@@ -187,21 +223,35 @@ task PID_Drive(){
 void driveDistance(float dist){
 	linearDistance = dist;
 	isDriving = true;
-	//while(isDriving){
-	//	wait1Msec(20);
-	//}
+	while(isDriving){
+		wait1Msec(20);
+	}
 }
 
 void turnAngle(float ang){
 	turnAng = ang;
 	isTurning = true;
+	while(isTurning){
+		wait1Msec(20);
+	}
 }
+
+void driveWall(int time){
+	wallTime = time;
+	isWall = true;
+	while(isWall){
+		wait1Msec(20);
+	}
+}
+
 
 //TODO: Add arm functions.
 void dump(){
-	linearDistance = 123; //TODO: Add actual distance, will be much farther than fense is from robot.
-	isDriving = true; //Starts the drive
-	wait1Msec(200); //TODO: Add actual time here, will need to be measured.
-	isDriving = false; //Kills the drive when up on the fence.
-	linearDistance = 0; //Resets linear distance.
+	armTask_ArmState = ARM_HOLDING;
+	delay(500);
+	motor[LD1] = motor[LD2] = motor[LD3] = -100;
+	motor[RD1] = motor[RD2] = motor[RD3] = -100;
+	delay(500);
+	armTask_ArmState = ARM_DUMPING;
+	driveWall(1000);
 }
