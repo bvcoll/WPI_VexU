@@ -38,7 +38,7 @@ void pidArm(int armSetpoint) {
 bool holding = true;
 //ARM CONTROL SYSTEM
 void userArm(){
-	if(vexRT(Btn5D)){ //TODO FIX
+	if(vexRT(Btn5U)){ //TODO FIX
 		setArm(armUpSpeed);
 		holding = false;
 	}

@@ -172,12 +172,12 @@ void getCornerStars(bool isLeft){
 
 
 void programmingSkills(){
-	//preloads();
-	//driveDistance(26); // old 30
-	//turnAngle(-90);
-	//driveIntoWall(1000);
+	preloads();
+	driveDistance(26); // old 30
+	turnAngle(-90);
+	driveIntoWall(1000);
 
-	/*
+
   //drive to get cube
 	driveDistance(42);
 	armTask_ArmState = ARM_HIGH_HOLDING;
@@ -186,27 +186,18 @@ void programmingSkills(){
 	dump(true);
 	driveWall(1000,100);
 	dump();
-	*/
+
 
 	//Cross field to get starts by fense
-	driveDistance(15);
+	driveDistance(15, true);
 	turnAngle(88);
 	driveDistance(-10);
-	driveDistance(40);
+	driveDistance(45);
 	closeClaw();
 	delay(250);
-	driveDistance(24);
-	openClaw();
-	turnAngle(-15);
-	driveWall(500,100);
-
-	//Pick up starts and dump
-	closeClaw();
-	delay(750);
-	driveDistance(-12);
-	armTask_ArmState = ARM_HIGH_HOLDING;
+	armTask_ArmState = ARM_HOLDING;
 	delay(500);
-	driveDistance(14);
+	driveDistance(40);
 	turnAngle(-90);
 	driveWall(100);
 	armTask_ArmState = ARM_DUMPING;
@@ -214,18 +205,35 @@ void programmingSkills(){
 
 
 	//Drive forward and pick up corner star
-	driveWall(1500,100);
+	driveDistance(30);
 	turnAngle(-45);
 	driveDistance(10);
 	turnAngle(-45);
 	driveDistance(72);
+	turnAngle(-15);
 	driveWall(500,100);
 	closeClaw();
+
+	//Pick up turn and dump
+	driveDistance(-12);
+	armTask_ArmState = ARM_HIGH_HOLDING;
+	turnAngle(90);
+	dump();
 }
 
 void oldBS(){
 
 
+  //drive to get cube
+	driveDistance(42);
+	armTask_ArmState = ARM_HIGH_HOLDING;
+	driveDistance(48); // old 36
+	turnAngle(90);
+	dump(true);
+	driveWall(1000,100);
+	dump();
+
+
 	//Cross field to get starts by fense
 	driveDistance(15);
 	turnAngle(88);
@@ -259,5 +267,4 @@ void oldBS(){
 	driveDistance(72);
 	driveWall(500,100);
 	closeClaw();
-
 }

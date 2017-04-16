@@ -155,10 +155,10 @@ task usercontrol()
 	}
 
 	// Start motor slew rate control
-	//StartTask( MotorSlewRateTask );
+	StartTask( MotorSlewRateTask );
 
 	// Start driver control tasks
-	//StartTask( ArcadeDrive );
+	StartTask( ArcadeDrive );
 
 	//START ARM PID
 	initArmPID();
@@ -178,15 +178,15 @@ task usercontrol()
 		//TODO: Re enable slew drive
 
 		if(vexRT(Btn5U)){
-			arcadeDrive();
+			//arcadeDrive();
 		}
 
-		if(vexRT(Btn8U) && !lastBegan){
+		if(vexRT(Btn8L) && !lastBegan){
 			programmingSkills();
 			//driveWall(1000);
 		}
 
-		lastBegan = vexRT(Btn8U);
+		lastBegan = vexRT(Btn8L);
 
 		//Reset encoders and stop all drive loops
 		if(vexRT(Btn8L)){

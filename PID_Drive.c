@@ -11,6 +11,13 @@ int maxspeed = MAX_VOLTAGE;
 int driveErrorThreshold = 1;
 int turnErrorThreshold = 1;
 
+int Tight_driveErrorThreshold = 1;
+int Tight_turnErrorThreshold = 1;
+
+int DGAF_driveErrorThreshold = 2;
+int DGAF_turnErrorThreshold = 4;
+
+
 //Linear variables
 float disterror, differror, distintegral, diffintegral,  distspeed, diffspeed, direction = 0;
 float distderivative, diffderivative, prevdisterror, prevdifferror = 0;
@@ -19,7 +26,7 @@ int lastLatched, startingTime, wallTime = 0;
 
 //LINEAR DRIVE GAINS
 float distP = 14;
-float distI = 0.12;
+float distI = 0.25;  //OLD 0.12
 float distD = 125; //.2
 //STEADY DRIVE GAINS
 float diffP = 8;   //OLD 5
@@ -27,8 +34,8 @@ float diffI = 0.05;
 float diffD = 0.2;
 //TURN GAINS
 float turnP = 10;
-float turnI = 0.1; //OLD 0.05
-float turnD = 67;
+float turnI = 0.3; //OLD 0.2
+float turnD = 80;  //67
 
 //Return value of left encoder in inches
 float getLeftEncoder() {
@@ -57,7 +64,7 @@ void autoTurn(int voltage) {
 	motor(RD1)  = motor(RD2) = motor(RD3) = -voltage;
 }
 
-void initPID(){
+void initPID(bool tight = false){
 	resetEncoders();
 	prevdisterror = 0;
 	prevdifferror = 0;
@@ -66,6 +73,15 @@ void initPID(){
 	lastLatched = nPgmTime;
 	hitWall = false;
 	startingTime = nPgmTime + wallTime;
+
+
+	if(tight){
+		driveErrorThreshold = Tight_driveErrorThreshold;
+		turnErrorThreshold = Tight_turnErrorThreshold;
+		} else {
+		driveErrorThreshold = DGAF_driveErrorThreshold;
+		turnErrorThreshold = DGAF_turnErrorThreshold;
+	}
 
 }
 
@@ -224,7 +240,7 @@ task PID_Drive(){
 				lastLatched = nPgmTime;
 				hitWall = false;
 				} else {
-				hitWall =  nPgmTime - lastLatched > 500;
+				hitWall =  nPgmTime - lastLatched > 250; //OLD 500
 			}
 
 			//If hitWall and beginning time has passed stop motors and reset
@@ -243,8 +259,8 @@ task PID_Drive(){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //Drives given distance in inches
-void driveDistance(float dist){
-	initPID();
+void driveDistance(float dist, bool tolerance = false){
+	initPID(tolerance);
 	linearDistance = dist;
 	isDriving = true;
 	while(isDriving){
@@ -252,8 +268,8 @@ void driveDistance(float dist){
 	}
 }
 //Turns given angle in degrees (right = +)
-void turnAngle(float ang){
-	initPID();
+void turnAngle(float ang, bool tolerance = false){
+	initPID(tolerance);
 	turnAng = ang;
 	isTurning = true;
 	while(isTurning){
