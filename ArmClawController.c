@@ -12,7 +12,9 @@ enum armState
 	ARM_HIGH_HOLDING,
 	ARM_DUMPING,
 	ARM_RESET,
-	ARM_DEPLOY
+	ARM_DEPLOY,
+	ARM_FENCE_KNOCKING,
+	ARM_CLIMBING_SETUP
 
 };
 
@@ -86,6 +88,16 @@ task ArmClawController()
 			setArm(0);
 			delay(250);
 			armTask_ArmState = ARM_RESET;
+			break;
+
+
+		case ARM_FENCE_KNOCKING:
+			openClaw();
+			pidArm(centerFenceKnockingSetpoint);
+			break;
+
+		case ARM_CLIMBING_SETUP:
+			pidArm(hangingSetpoint);
 			break;
 
 		}

@@ -47,6 +47,10 @@ int middleArmSetpoint = 1200; //Setpoint to hold at for driving around the field
 int highHoldingArmSetpoint = 1500;
 int topArmSetpoint = 3000; //3000 //Setpoint for dumping
 int scoreThreshold = topArmSetpoint - 1250; //minus 1500 //Point at which to open the claw
+//TODO: Actually tune these
+int centerFenceKnockingSetpoint = 2000;
+int hangingSetpoint = 3500;
+
 
 
 //LCD Chooser Defines
@@ -63,7 +67,6 @@ int scoreThreshold = topArmSetpoint - 1250; //minus 1500 //Point at which to ope
 #include "Claw.c" //All control code for the claw.
 #include "SlewDrive.c" //Slew drive functions.
 #include "Arm.c" //Basic arm functions.
-#include "ArmUserControl.c" //User control code for the arm.
 #include "ArmClawController.c"
 #include "PID_Drive.c"
 #include "Drive.c" //Basic drive functions.
@@ -145,48 +148,79 @@ task autonomous()
 /*                                                                           */
 /*  You must modify the code to add your own robot specific commands here.   */
 /*---------------------------------------------------------------------------*/
+
+
+/*---------------------------------------------------------------------------*/
+/*                                  Button Map                               */
+/*---------------------------------------------------------------------------*/
+/*
+LEFT TRIGGER:
+	5U - Manual arm up
+	5D - Manual arm down
+
+RIGHT TRIGGER:
+	6U - Dumping
+	6D - Hovering
+
+LEFT BUTTONS:
+	7U - Climbing Position
+	7D - Climb
+	7L -
+	7R - Start Hitting Position
+
+RIGHT BUTTONS:
+	8U - Open Claw
+	8D - Close Claw
+	8L - 90 Left
+	8R - 90 Right
+*/
 bool lastBegan = false;
 int distanceToDrive = 48;
 float leftEncoderValue, rightEncoderValue, pot, gyro, avgEncoderValue;
 task usercontrol()
 {
-	if (sensorValue[clawSolenoid]==1){
+	if (SensorValue[clawSolenoid]==1){
 		openClaw();
 	}
 
 	// Start motor slew rate control
-	StartTask( MotorSlewRateTask );
+	startTask( MotorSlewRateTask );
 
 	// Start driver control tasks
-	StartTask( ArcadeDrive );
+	startTask( ArcadeDrive );
 
 	//START ARM PID
 	initArmPID();
-
 	startTask(ArmClawController);
 	startTask(PID_Drive);
 
 	while (true)
 	{
+		/* SENSOR VALUES
 		avgEncoderValue = getAvgEncoder();
 		leftEncoderValue = getLeftEncoder();
 		rightEncoderValue = getRightEncoder();
-
+		gyro = getGyro();
+		pot = SensorValue(armPot);
+		*/
 
 		/*User drive method*/
-		//arcadeDrive();
-		//TODO: Re enable slew drive
+		//make sure slew & arcade drive task are started
 
+
+		/*                        Skills Buttons                    */
+		/*
 		if(vexRT(Btn5U)){
 			//arcadeDrive();
 		}
 
+		//Buttons to start skills
 		if(vexRT(Btn8L) && !lastBegan){
 			programmingSkills();
 			//driveWall(1000);
 		}
-
 		lastBegan = vexRT(Btn8L);
+
 
 		//Reset encoders and stop all drive loops
 		if(vexRT(Btn8L)){
@@ -195,14 +229,17 @@ task usercontrol()
 			isDriving = false;
 			isWall = false;
 		}
+		*/
 
-		gyro = getGyro();
-		pot = SensorValue(armPot);
-
+		/*User 90 degree turns*/
+		driver90Turns();
 
 		/*User state changes*/
 		if (vexRT(Btn7R)) {
-			armTask_ArmState = ARM_HIGH_HOLDING;
+			armTask_ArmState = ARM_FENCE_KNOCKING;
+		}
+		if (vexRT(Btn7R)) {
+			armTask_ArmState = ARM_CLIMBING_SETUP;
 		}
 		if (vexRT(Btn5D) || vexRT(Btn5U)|| vexRT(Btn7U)) {
 			armTask_ArmState = ARM_USER;

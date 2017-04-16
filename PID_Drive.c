@@ -301,3 +301,25 @@ void dump(bool high = false){
 	armTask_ArmState = ARM_DUMPING;
 	driveWall(1000);
 }
+
+int joystickDeadband = 33;
+bool turn90Debounce = false;
+void driver90Turns(){  //Automatic 90 turns for the driver
+	//If requesting to drive kill automatic turning
+	if(abs(vexRT[Ch3]) + abs(vexRT[Ch1]) >joystickDeadband){
+			isTurning = false;
+	}
+	//Turn right or left depending on button only if it's the first time the button was hit
+	if(vexRT[ Btn8R ] && !turn90Debounce){
+		initPID();
+		turnAng = 90;
+		isTurning = true;
+	}
+	if(vexRT[ Btn8L ] && !turn90Debounce){
+		initPID();
+		turnAng = -90;
+		isTurning = true;
+	}
+	//Record the state of the button for the next loop
+	turn90Debounce = vexRT[ Btn8L ] || vexRT[ Btn8R ];
+}

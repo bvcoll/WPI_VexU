@@ -32,7 +32,7 @@
 
 #define     JOY_DRIVE_V     Ch3
 #define     JOY_DRIVE_H     Ch1
-#define     JOY_THRESHOLD   15
+//#define     JOY_THRESHOLD   15
 
 /*-----------------------------------------------------------------------------*/
 /*                                                                             */
