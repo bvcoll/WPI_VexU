@@ -1,4 +1,5 @@
 #pragma config(Sensor, in1,    armPot,         sensorPotentiometer)
+#pragma config(Sensor, in2,    powerExpander,  sensorAnalog)
 #pragma config(Sensor, dgtl1,  rightEncoder,   sensorQuadEncoder)
 #pragma config(Sensor, dgtl3,  leftEncoder,    sensorQuadEncoder)
 #pragma config(Sensor, dgtl5,  armBottomLimit, sensorTouch)
@@ -48,8 +49,8 @@ int highHoldingArmSetpoint = 1500;
 int topArmSetpoint = 3000; //3000 //Setpoint for dumping
 int scoreThreshold = topArmSetpoint - 1250; //minus 1500 //Point at which to open the claw
 //TODO: Actually tune these
-int centerFenceKnockingSetpoint = 2000;
-int hangingSetpoint = 3500;
+int centerFenceKnockingSetpoint = 1900;
+int hangingSetpoint = 3100;
 
 
 
@@ -84,12 +85,15 @@ int hangingSetpoint = 3500;
 /*  not every time that the robot is disabled.                               */
 /*---------------------------------------------------------------------------*/
 
+//Make our three menus, these must be pointers
+menu *autonomousSelectionMenu, *programmingSkillsMenu, *endPreAutonMenu, *powerExpanderVoltageMenu, *batteryVoltageMenu, *backupBatteryVoltageMenu;
 void pre_auton()
 {
-	bStopTasksBetweenModes = false;
+	bStopTasksBetweenModes = true;
 	resetEncoders();
 
-	/**
+
+
 	//Menu system
 	//Level 1 - General Info
 	autonomousSelectionMenu = lcd_newMenu("Select Auton", 2);
@@ -101,7 +105,7 @@ void pre_auton()
 	batteryVoltageMenu = lcd_newMenu(batteryVoltage);
 
 	string powerExpanderVoltage;
-	//sprintf(powerExpanderVoltage, "Expander: %1.2f%c", SensorValue[powerExpander] / ANALOG_IN_TO_V, 'V'); //TODO: Add powerexpander if we're using it
+	sprintf(powerExpanderVoltage, "Expander: %1.2f%c", SensorValue[powerExpander] / ANALOG_IN_TO_V, 'V'); //TODO: Add powerexpander if we're using it
 	powerExpanderVoltageMenu = lcd_newMenu(powerExpanderVoltage);
 
 	string backupBatteryVoltage;
@@ -112,8 +116,8 @@ void pre_auton()
 
 	bLCDBacklight = true;
 	startTask(lcdControlTask);
-	while (!lcd_getLCDSafetyState() && !endPreAuton) { wait1Msec(50); }
-	*/
+	//while (!lcd_getLCDSafetyState() && !endPreAuton) { wait1Msec(50); }
+
 
 }
 
@@ -129,10 +133,26 @@ void pre_auton()
 
 task autonomous()
 {
-	//Call startAutonomous() here
+
+	if (SensorValue[clawSolenoid]==1){
+		openClaw();
+	}
+
+	//START ARM PID
+	initArmPID();
+	startTask(ArmClawController);
+	startTask(PID_Drive);
+
+	initPID();
+	isTurning = false;
+	isDriving = false;
+	isWall = false;
 
 	//True for left, false for right
-	//auton(false);
+
+	//LEFT, COME BACK, COME BACK AGAIN
+	auton(true,false,true);
+	//scoreCenterCube(1,false);
 	wait1Msec(100000);
 	// ..........................................................................
 	// Insert user code here.
@@ -155,33 +175,30 @@ task autonomous()
 /*---------------------------------------------------------------------------*/
 /*
 LEFT TRIGGER:
-	5U - Manual arm up
-	5D - Manual arm down
+5U - Manual arm up
+5D - Manual arm down
 
 RIGHT TRIGGER:
-	6U - Dumping
-	6D - Hovering
+6U - Dumping
+6D - Hovering
 
 LEFT BUTTONS:
-	7U - Climbing Position
-	7D - Climb
-	7L -
-	7R - Start Hitting Position
+7U - Climbing Position
+7D - Climb
+7L -
+7R - Star Hitting Position
 
 RIGHT BUTTONS:
-	8U - Open Claw
-	8D - Close Claw
-	8L - 90 Left
-	8R - 90 Right
+8U - Open Claw
+8D - Close Claw
+8L - 90 Left
+8R - 90 Right
 */
 bool lastBegan = false;
 int distanceToDrive = 48;
 float leftEncoderValue, rightEncoderValue, pot, gyro, avgEncoderValue;
 task usercontrol()
 {
-	if (SensorValue[clawSolenoid]==1){
-		openClaw();
-	}
 
 	// Start motor slew rate control
 	startTask( MotorSlewRateTask );
@@ -189,20 +206,26 @@ task usercontrol()
 	// Start driver control tasks
 	startTask( ArcadeDrive );
 
+
 	//START ARM PID
 	initArmPID();
+	armTask_ArmState = ARM_USER;
 	startTask(ArmClawController);
-	startTask(PID_Drive);
+	initPID();
+	isTurning = false;
+	isDriving = false;
+	isWall = false;
+	//startTask(PID_Drive);
 
 	while (true)
 	{
-		/* SENSOR VALUES
+		// SENSOR VALUES
 		avgEncoderValue = getAvgEncoder();
 		leftEncoderValue = getLeftEncoder();
 		rightEncoderValue = getRightEncoder();
 		gyro = getGyro();
 		pot = SensorValue(armPot);
-		*/
+
 
 		/*User drive method*/
 		//make sure slew & arcade drive task are started
@@ -211,23 +234,23 @@ task usercontrol()
 		/*                        Skills Buttons                    */
 		/*
 		if(vexRT(Btn5U)){
-			//arcadeDrive();
+		//arcadeDrive();
 		}
 
 		//Buttons to start skills
 		if(vexRT(Btn8L) && !lastBegan){
-			programmingSkills();
-			//driveWall(1000);
+		programmingSkills();
+		//driveWall(1000);
 		}
 		lastBegan = vexRT(Btn8L);
 
 
 		//Reset encoders and stop all drive loops
 		if(vexRT(Btn8L)){
-			resetEncoders();
-			isTurning = false;
-			isDriving = false;
-			isWall = false;
+		resetEncoders();
+		isTurning = false;
+		isDriving = false;
+		isWall = false;
 		}
 		*/
 
@@ -238,7 +261,7 @@ task usercontrol()
 		if (vexRT(Btn7R)) {
 			armTask_ArmState = ARM_FENCE_KNOCKING;
 		}
-		if (vexRT(Btn7R)) {
+		if (vexRT(Btn7U)) {
 			armTask_ArmState = ARM_CLIMBING_SETUP;
 		}
 		if (vexRT(Btn5D) || vexRT(Btn5U)|| vexRT(Btn7U)) {

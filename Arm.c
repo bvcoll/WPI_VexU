@@ -5,18 +5,20 @@
 // Code for basic robot arm control.
 
 //ARM PID CONSTANTS
-float kP_arm = 0.3, kI_arm = 0, kD_arm = 0;
+float kP_arm = 0.5, kI_arm = 0, kD_arm = 0.05;
+
+//.3
 
 pos_PID armPID; //Make a pid controller for the arm
 
 //ARM SETPOINTS
-#define armRestingSpeed 0 //OLD -15
+#define armRestingSpeed -30 //OLD -15
 #define armDownSpeed -127
 #define armManualDownSpeed -75
 #define armUpSpeed 127
 
 void initArmPID(){
-pos_PID_InitController(&armPID, A4, kP_arm, kI_arm, kD_arm); //Initialize our Arm PID controller with sensor and gains
+	pos_PID_InitController(&armPID, A4, kP_arm, kI_arm, kD_arm,10); //Initialize our Arm PID controller with sensor and gains
 
 }
 //Moves the arm at the given voltage.
@@ -51,6 +53,15 @@ void userArm(){
 		holding = true;
 	}
 	else {
+		if(holding){
+		if(SensorValue(armBottomLimit) == 1){
 			setArm(armRestingSpeed);
+			} else {
+			setArm(-50);
+		}
+	}else {
+			setArm(0);
+
+	}
 	}
 }

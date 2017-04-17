@@ -32,7 +32,7 @@
 
 #define     JOY_DRIVE_V     Ch3
 #define     JOY_DRIVE_H     Ch1
-//#define     JOY_THRESHOLD   15
+#define     JOYSTICK_THRESHOLD   15
 
 /*-----------------------------------------------------------------------------*/
 /*                                                                             */
@@ -160,7 +160,7 @@ task ArcadeDrive()
         ctl_h = vexRT[ JOY_DRIVE_H ];
 
         // Ignore joystick near center
-        if( (abs(ctl_v) <= JOY_THRESHOLD) && (abs(ctl_h) <= JOY_THRESHOLD) )
+        if( (abs(ctl_v) <= JOYSTICK_THRESHOLD) && (abs(ctl_h) <= JOYSTICK_THRESHOLD) )
 	        {
 	        drive_l = 0;
             drive_r = 0;

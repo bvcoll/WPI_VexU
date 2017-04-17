@@ -7,6 +7,9 @@ float linearDistance = 0;
 float turnAng = 0;
 int maxspeed = MAX_VOLTAGE;
 
+//TIME FOR US TO GIVE UP
+int stuckTimeout = 1000;
+bool skills = false;
 
 int driveErrorThreshold = 1;
 int turnErrorThreshold = 1;
@@ -21,8 +24,9 @@ int DGAF_turnErrorThreshold = 4;
 //Linear variables
 float disterror, differror, distintegral, diffintegral,  distspeed, diffspeed, direction = 0;
 float distderivative, diffderivative, prevdisterror, prevdifferror = 0;
-bool hitWall = false;
-int lastLatched, startingTime, wallTime = 0;
+float disterror_Stuck, distderivative_Stuck, prevdisterror_Stuck =0;
+bool hitWall, hitSomething, goingBack = false;
+int lastLatched, lastLatched_Stuck, startingTime, wallTime = 0;
 
 //LINEAR DRIVE GAINS
 float distP = 14;
@@ -70,9 +74,13 @@ void initPID(bool tight = false){
 	prevdifferror = 0;
 	distintegral = 0;
 	diffintegral = 0;
+	disterror_Stuck = distderivative_Stuck = prevdisterror_Stuck = 0;
 	lastLatched = nPgmTime;
+	lastLatched_Stuck = nPgmTime;
 	hitWall = false;
+	hitSomething = false;
 	startingTime = nPgmTime + wallTime;
+	goingBack = false;
 
 
 	if(tight){
@@ -85,26 +93,27 @@ void initPID(bool tight = false){
 
 }
 
+void stallDetection(){
+	//Calculate if we can't move
+	disterror_Stuck = getAvgEncoder(); //Get encoder value
+	distderivative_Stuck = disterror_Stuck - prevdisterror_Stuck; //Calculate distance derivative
+	prevdisterror_Stuck = disterror_Stuck; //Update previous distance error
+
+	//When derivative error is less than certain value begin latching
+	//If latched for more than certain time set hitWall to true
+	if(abs(distderivative_Stuck) > 0.5){ //OLD 0.2
+		lastLatched_Stuck = nPgmTime;
+		hitSomething = false;
+		} else {
+		hitSomething =  nPgmTime - lastLatched_Stuck > stuckTimeout;
+	}
+}
+
 //////////////////////////////////////////////////////////* DRIVE PID TASK *//////////////////////////////////////////////////////////////////
 task PID_Drive(){
 	while(true){
 
-		/*
-		//Executes once when isDriving or isTurning or isWall is flipped true.
-		if(isDriving || isTurning || isWall){
-		resetEncoders();
-		prevdisterror = 0;
-		prevdifferror = 0;
-		distintegral = 0;
-		diffintegral = 0;
-		lastLatched = 0;
-		hitWall = false;
-		}
 
-		//Calculate starting time for wall function
-		startingTime = nPgmTime + wallTime;
-
-		*/
 
 		//Runs the PID loop while isDriving is true and sets isDriving to false when done.
 		while(isDriving){
@@ -160,6 +169,16 @@ task PID_Drive(){
 					motor[RD1] = motor[RD2] = motor[RD3] = 0;
 				}
 			}
+			//stallDetection();
+			hitSomething = false;
+			if(!skills && hitSomething){
+				//hover();
+				linearDistance = 0;
+				goingBack = true;
+				isDriving = false;
+			}
+
+
 			wait1Msec(20);
 		}
 
@@ -249,7 +268,6 @@ task PID_Drive(){
 				motor[RD1] = motor[RD2] = motor[RD3] = 0;
 				isWall = false;
 			}
-
 			wait1Msec(20);
 		}
 
@@ -302,12 +320,48 @@ void dump(bool high = false){
 	driveWall(1000);
 }
 
+void wallThenDump(int time,bool high = false){
+
+	if(high){
+		armTask_ArmState = ARM_HIGH_HOLDING;
+		} else {
+		armTask_ArmState = ARM_HOLDING;
+	}
+	delay(1000);
+	driveWall(time);
+	armTask_ArmState = ARM_DUMPING;
+	delay(1500);
+
+}
+
+//Drives into wall begining to sense lack of movement after given time
+void smartDriveWall(int time, int power = -100){
+	initPID();
+	wallPower = -100;
+	wallTime = time;
+	isWall = true;
+	while(isWall){
+		wait1Msec(20);
+	}
+	if(abs(getGyro()) > 5){
+		driveDistance(18);
+		turnAngle(180);
+		driveWall(500,100);
+		closeClaw();
+		delay(500);
+		driveDistance(-6);
+		hover();
+		turnAngle(-90);
+		wallThenDump(1500);
+	}
+}
+
 int joystickDeadband = 33;
 bool turn90Debounce = false;
 void driver90Turns(){  //Automatic 90 turns for the driver
 	//If requesting to drive kill automatic turning
 	if(abs(vexRT[Ch3]) + abs(vexRT[Ch1]) >joystickDeadband){
-			isTurning = false;
+		isTurning = false;
 	}
 	//Turn right or left depending on button only if it's the first time the button was hit
 	if(vexRT[ Btn8R ] && !turn90Debounce){

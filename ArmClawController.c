@@ -35,11 +35,9 @@ task ArmClawController()
 
 		case ARM_USER:
 
-			if (true) {
-				holding = true;
 				userClaw();
 				userArm();
-			}
+
 			break;
 
 		case ARM_HOLDING:
@@ -77,6 +75,7 @@ task ArmClawController()
 				setArm(armDownSpeed);
 			}
 			else {
+				holding = true;
 				armTask_ArmState = ARM_USER;
 			}
 			break;
