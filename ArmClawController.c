@@ -35,8 +35,8 @@ task ArmClawController()
 
 		case ARM_USER:
 
-				userClaw();
-				userArm();
+			userClaw();
+			userArm();
 
 			break;
 
@@ -96,6 +96,7 @@ task ArmClawController()
 			break;
 
 		case ARM_CLIMBING_SETUP:
+			openClaw();
 			pidArm(hangingSetpoint);
 			break;
 

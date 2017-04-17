@@ -64,54 +64,54 @@ int motorSlew[ MOTOR_NUM ];
 
 task MotorSlewRateTask()
 {
-    int motorIndex;
-    int motorTmp;
+	int motorIndex;
+	int motorTmp;
 
-    // Initialize stuff
-    for(motorIndex=0;motorIndex<MOTOR_NUM;motorIndex++)
-        {
-        motorReq[motorIndex] = 0;
-        motorSlew[motorIndex] = MOTOR_DEFAULT_SLEW_RATE;
-        }
+	// Initialize stuff
+	for(motorIndex=0;motorIndex<MOTOR_NUM;motorIndex++)
+	{
+		motorReq[motorIndex] = 0;
+		motorSlew[motorIndex] = MOTOR_DEFAULT_SLEW_RATE;
+	}
 
-    // run task until stopped
-    while( true )
-        {
-        // run loop for every motor
-        for( motorIndex=0; motorIndex<MOTOR_NUM; motorIndex++)
-            {
-            // So we don't keep accessing the internal storage
-            motorTmp = motor[ motorIndex ];
+	// run task until stopped
+	while( true )
+	{
+		// run loop for every motor
+		for( motorIndex=0; motorIndex<MOTOR_NUM; motorIndex++)
+		{
+			// So we don't keep accessing the internal storage
+			motorTmp = motor[ motorIndex ];
 
-            // Do we need to change the motor value ?
-            if( motorTmp != motorReq[motorIndex] )
-                {
-                // increasing motor value
-                if( motorReq[motorIndex] > motorTmp )
-                    {
-                    motorTmp += motorSlew[motorIndex];
-                    // limit
-                    if( motorTmp > motorReq[motorIndex] )
-                        motorTmp = motorReq[motorIndex];
-                    }
+			// Do we need to change the motor value ?
+			if( motorTmp != motorReq[motorIndex] )
+			{
+				// increasing motor value
+				if( motorReq[motorIndex] > motorTmp )
+				{
+					motorTmp += motorSlew[motorIndex];
+					// limit
+					if( motorTmp > motorReq[motorIndex] )
+						motorTmp = motorReq[motorIndex];
+				}
 
-                // decreasing motor value
-                if( motorReq[motorIndex] < motorTmp )
-                    {
-                    motorTmp -= motorSlew[motorIndex];
-                    // limit
-                    if( motorTmp < motorReq[motorIndex] )
-                        motorTmp = motorReq[motorIndex];
-                    }
+				// decreasing motor value
+				if( motorReq[motorIndex] < motorTmp )
+				{
+					motorTmp -= motorSlew[motorIndex];
+					// limit
+					if( motorTmp < motorReq[motorIndex] )
+						motorTmp = motorReq[motorIndex];
+				}
 
-                // finally set motor
-                motor[motorIndex] = motorTmp;
-                }
-            }
+				// finally set motor
+				motor[motorIndex] = motorTmp;
+			}
+		}
 
-        // Wait approx the speed of motor update over the spi bus
-        wait1Msec( MOTOR_TASK_DELAY );
-        }
+		// Wait approx the speed of motor update over the spi bus
+		wait1Msec( MOTOR_TASK_DELAY );
+	}
 }
 
 /*-----------------------------------------------------------------------------*/
@@ -122,9 +122,9 @@ task MotorSlewRateTask()
 void
 DriveLeftMotor( int value )
 {
-    motorReq[LD1] = value;
-    motorReq[LD2] = value;
-    motorReq[LD3] = value;
+	motorReq[LD1] = value;
+	motorReq[LD2] = value;
+	motorReq[LD3] = value;
 }
 
 /*-----------------------------------------------------------------------------*/
@@ -135,9 +135,9 @@ DriveLeftMotor( int value )
 void
 DriveRightMotor( int value )
 {
-    motorReq[RD1] = value;
-    motorReq[RD2] = value;
-    motorReq[RD3] = value;
+	motorReq[RD1] = value;
+	motorReq[RD2] = value;
+	motorReq[RD3] = value;
 }
 
 /*-----------------------------------------------------------------------------*/
@@ -147,36 +147,41 @@ DriveRightMotor( int value )
 
 task ArcadeDrive()
 {
-    int    ctl_v;
-    int    ctl_h;
-    int    drive_l;
-    int    drive_r;
+	int    ctl_v;
+	int    ctl_h;
+	int    drive_l;
+	int    drive_r;
 
-    // Basic arcade control
-    while( true )
-        {
-        // Get joystick H and V control
-        ctl_v = vexRT[ JOY_DRIVE_V ];
-        ctl_h = vexRT[ JOY_DRIVE_H ];
+	// Basic arcade control
+	while( true )
+	{
+		// Get joystick H and V control
+		ctl_v = vexRT[ JOY_DRIVE_V ];
 
-        // Ignore joystick near center
-        if( (abs(ctl_v) <= JOYSTICK_THRESHOLD) && (abs(ctl_h) <= JOYSTICK_THRESHOLD) )
-	        {
-	        drive_l = 0;
-            drive_r = 0;
-	        }
-	    else
-	        {
-            // Create drive for left and right motors
-	        drive_l = (ctl_v + ctl_h);
-	    	drive_r = (ctl_v - ctl_h);
-	    	}
+		if(vexRT[Btn5U]){
+			ctl_h = vexRT[ JOY_DRIVE_H ]/2;
+			} else {
+			ctl_h = vexRT[ JOY_DRIVE_H ];
+		}
 
-	    // Now send out to motors
-	    DriveLeftMotor( drive_l );
-        DriveRightMotor( drive_r );
+		// Ignore joystick near center
+		if( (abs(ctl_v) <= JOYSTICK_THRESHOLD) && (abs(ctl_h) <= JOYSTICK_THRESHOLD) )
+		{
+			drive_l = 0;
+			drive_r = 0;
+		}
+		else
+		{
+			// Create drive for left and right motors
+			drive_l = (ctl_v + ctl_h);
+			drive_r = (ctl_v - ctl_h);
+		}
 
-        // don't hog CPU
-	    wait1Msec( 25 );
-	    }
+		// Now send out to motors
+		DriveLeftMotor( drive_l );
+		DriveRightMotor( drive_r );
+
+		// don't hog CPU
+		wait1Msec( 25 );
+	}
 }

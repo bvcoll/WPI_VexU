@@ -2,7 +2,7 @@ void scoreCenterCube(int dir, bool comeBack = true){
 	//drive to get cube
 	driveDistance(26);
 	turnAngle(90*dir);
-	driveIntoWall(1500);
+	driveWall(1500);
 
 	driveDistance(46);  //OLD 44
 	if(!goingBack){
@@ -87,7 +87,7 @@ void programmingSkills(){
 	preloads();
 	driveDistance(26); // old 30
 	turnAngle(-90);
-	driveIntoWall(1000);
+	driveWall(1000);
 
 
 	//drive to get cube

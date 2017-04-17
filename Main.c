@@ -92,8 +92,6 @@ void pre_auton()
 	bStopTasksBetweenModes = true;
 	resetEncoders();
 
-
-
 	//Menu system
 	//Level 1 - General Info
 	autonomousSelectionMenu = lcd_newMenu("Select Auton", 2);
@@ -142,6 +140,7 @@ task autonomous()
 	initArmPID();
 	startTask(ArmClawController);
 	startTask(PID_Drive);
+	startTask(autoStallDetection);
 
 	initPID();
 	isTurning = false;
@@ -175,7 +174,7 @@ task autonomous()
 /*---------------------------------------------------------------------------*/
 /*
 LEFT TRIGGER:
-5U - Manual arm up
+5U - Slow Turn
 5D - Manual arm down
 
 RIGHT TRIGGER:
@@ -183,9 +182,9 @@ RIGHT TRIGGER:
 6D - Hovering
 
 LEFT BUTTONS:
-7U - Climbing Position
+7U - Manual arm up
 7D - Climb
-7L -
+7L - Climbing Position
 7R - Star Hitting Position
 
 RIGHT BUTTONS:
@@ -199,18 +198,20 @@ int distanceToDrive = 48;
 float leftEncoderValue, rightEncoderValue, pot, gyro, avgEncoderValue;
 task usercontrol()
 {
-
 	// Start motor slew rate control
 	startTask( MotorSlewRateTask );
 
 	// Start driver control tasks
 	startTask( ArcadeDrive );
 
-
 	//START ARM PID
+	if (SensorValue[clawSolenoid]==1){
+		openClaw();
+	}
 	initArmPID();
 	armTask_ArmState = ARM_USER;
 	startTask(ArmClawController);
+
 	initPID();
 	isTurning = false;
 	isDriving = false;
@@ -255,16 +256,16 @@ task usercontrol()
 		*/
 
 		/*User 90 degree turns*/
-		driver90Turns();
+		//driver90Turns();
 
 		/*User state changes*/
 		if (vexRT(Btn7R)) {
 			armTask_ArmState = ARM_FENCE_KNOCKING;
 		}
-		if (vexRT(Btn7U)) {
+		if (vexRT(Btn7L)) {
 			armTask_ArmState = ARM_CLIMBING_SETUP;
 		}
-		if (vexRT(Btn5D) || vexRT(Btn5U)|| vexRT(Btn7U)) {
+		if (vexRT(Btn5D) || vexRT(Btn7U)|| vexRT(Btn7D)) {
 			armTask_ArmState = ARM_USER;
 		}
 		if(vexRT(Btn6D)) {

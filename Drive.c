@@ -56,17 +56,43 @@ void autoDrive(int voltage) {
 	motor(RD1)  = motor(RD2) = motor(RD3) = voltage + turn;
 }
 
-void driveIntoWall(int time, int power=-65){
-	resetEncoders();
-	motor(LD1) = motor(LD2) = motor(LD3) = power;
-	motor(RD1)  = motor(RD2) = motor(RD3) = power;
-	while(time>0){
-		motor(LD1) = motor(LD2) = motor(LD3) = power;
-		motor(RD1)  = motor(RD2) = motor(RD3) = power;
-		time-=20;
-		wait1Msec(20);
+
+float disterror_Stall, distderivative_Stall, prevdisterror_Stall =0;
+int lastLatched_Stall = 0;
+bool stalled = false;
+
+task autoStallDetection(){
+	disterror_Stall= distderivative_Stall= prevdisterror_Stall =0;
+	lastLatched_Stall = 0;
+	stalled = false;
+
+	while(true){
+		//Calculate if we can't move
+		disterror_Stall = getAvgEncoder(); //Get encoder value
+		distderivative_Stall = disterror_Stall - prevdisterror_Stall; //Calculate distance derivative
+		prevdisterror_Stall = disterror_Stall; //Update previous distance error
+
+		//When derivative error is less than certain value begin latching
+		//If latched for more than certain time set hitWall to true
+		if(abs(distderivative_Stall) > 0.2){
+			lastLatched_Stall = nPgmTime;
+			stalled = false;
+			} else {
+			stalled =  nPgmTime - lastLatched_Stall > 5000;
+		}
+		if(stalled){
+			isDriving = isTurning = isWall = false;
+			stopTask(PID_Drive);
+			delay(250);
+			motor[LD1] = motor[LD2] = motor[LD3] = 0;
+			motor[RD1] = motor[RD2] = motor[RD3] = 0;
+			stopTask(ArmClawController);
+			setArm(0);
+			delay(10000000);
+		}
+
+
+			wait1Msec(20);
+		}
+
 	}
-	//wait1Msec(time);
-	motor(LD1) = motor(LD2) = motor(LD3) = 0;
-	motor(RD1)  = motor(RD2) = motor(RD3) = 0;
-}
