@@ -55,18 +55,18 @@ int hangingSetpoint = 3100;
 
 
 //LCD Chooser Defines
-#define LCD_SAFETY_REQ_COMP_SWITCH //prevents waiting for LCD imput blocking driver control when comp switch is plugged in
+//#define LCD_SAFETY_REQ_COMP_SWITCH //prevents waiting for LCD imput blocking driver control when comp switch is plugged in
 #define MENU_NUM 6 //The number of allocated menus
 
 //Include BCI
 #define BCI_USE_POS_PID //Position domain PID control
 #define BCI_USE_ODOMETRY //Odometry tracking
 #define BCI_USE_LCDCONTROL //LCD menu system
+#define BCI_USE_MOTORCONTROL
 #include "BCI/BCI.h"
 
 //INCLUDES
 #include "Claw.c" //All control code for the claw.
-#include "SlewDrive.c" //Slew drive functions.
 #include "Arm.c" //Basic arm functions.
 #include "ArmClawController.c"
 #include "PID_Drive.c"
@@ -86,11 +86,13 @@ int hangingSetpoint = 3100;
 /*---------------------------------------------------------------------------*/
 
 //Make our three menus, these must be pointers
+int autonomousSelection = 222;
 menu *autonomousSelectionMenu, *programmingSkillsMenu, *endPreAutonMenu, *powerExpanderVoltageMenu, *batteryVoltageMenu, *backupBatteryVoltageMenu;
 void pre_auton()
 {
 	bStopTasksBetweenModes = true;
 	resetEncoders();
+	autonSelection = 111;
 
 	//Menu system
 	//Level 1 - General Info
@@ -114,8 +116,74 @@ void pre_auton()
 
 	bLCDBacklight = true;
 	startTask(lcdControlTask);
-	//while (!lcd_getLCDSafetyState() && !endPreAuton) { wait1Msec(50); }
 
+	while (!lcd_getLCDSafetyState() && !endPreAuton) { wait1Msec(50); }
+}
+
+bool startLeft, starsComeBack, cubeComeBack = false;
+//Run an autonomous function based on current selection
+void startAutonomous()
+{
+
+	//LEFT = 1
+	//TRUE = 1
+	//FALSE = 2
+	switch(autonSelection){
+		//left
+	case 111:
+		startLeft = true;
+		starsComeBack = false;
+		cubeComeBack = true;
+		break;
+
+	case 112:
+		startLeft = true;
+		starsComeBack = false;
+		cubeComeBack = false;
+		break;
+
+	case 121:
+		startLeft = true;
+		starsComeBack = true;
+		cubeComeBack = true;
+		break;
+
+	case 122:
+		startLeft = true;
+		starsComeBack = true;
+		cubeComeBack = false;
+
+		break;
+
+		//right
+	case 211:
+		startLeft = false;
+		starsComeBack = false;
+		cubeComeBack = true;
+		break;
+
+	case 212:
+		startLeft = false;
+		starsComeBack = false;
+		cubeComeBack = false;
+		break;
+
+	case 221:
+		startLeft = false;
+		starsComeBack = true;
+		cubeComeBack = true;
+		break;
+
+	case 222:
+		startLeft = false;
+		starsComeBack = true;
+		cubeComeBack = false;
+		break;
+
+	}
+
+	//LEFT, STARS COME BACK, CUBE COME BACK
+	auton(startLeft,starsComeBack,cubeComeBack);
 
 }
 
@@ -147,10 +215,8 @@ task autonomous()
 	isDriving = false;
 	isWall = false;
 
-	//True for left, false for right
+	startAutonomous();
 
-	//LEFT, COME BACK, COME BACK AGAIN
-	auton(true,false,true);
 	//scoreCenterCube(1,false);
 	wait1Msec(100000);
 	// ..........................................................................
@@ -198,11 +264,12 @@ int distanceToDrive = 48;
 float leftEncoderValue, rightEncoderValue, pot, gyro, avgEncoderValue;
 task usercontrol()
 {
+	//stopTask(autoStallDetection);
 	// Start motor slew rate control
-	startTask( MotorSlewRateTask );
+	initDriveSlew();
+	//Start the slew rate controller
+	startTask(motorSlewRateTask);
 
-	// Start driver control tasks
-	startTask( ArcadeDrive );
 
 	//START ARM PID
 	if (SensorValue[clawSolenoid]==1){
@@ -216,7 +283,6 @@ task usercontrol()
 	isTurning = false;
 	isDriving = false;
 	isWall = false;
-	//startTask(PID_Drive);
 
 	while (true)
 	{
@@ -227,9 +293,12 @@ task usercontrol()
 		gyro = getGyro();
 		pot = SensorValue(armPot);
 
+		//userArm();
+
 
 		/*User drive method*/
-		//make sure slew & arcade drive task are started
+		arcadeDrive();
+		//basicArcadeDrive();
 
 
 		/*                        Skills Buttons                    */
@@ -276,10 +345,4 @@ task usercontrol()
 		}
 		wait1Msec(15);
 	}
-}
-
-//Run an autonomous function based on current selection
-void startAutonomous()
-{
-
 }

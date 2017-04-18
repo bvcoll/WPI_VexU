@@ -80,32 +80,34 @@ task MotorSlewRateTask()
 		// run loop for every motor
 		for( motorIndex=0; motorIndex<MOTOR_NUM; motorIndex++)
 		{
-			// So we don't keep accessing the internal storage
-			motorTmp = motor[ motorIndex ];
+			if(motorIndex = 0 || motorIndex = 1 || motorIndex = 3 || motorIndex = 6 || motorIndex = 8 || motorIndex = 9){
+				// So we don't keep accessing the internal storage
+				motorTmp = motor[ motorIndex ];
 
-			// Do we need to change the motor value ?
-			if( motorTmp != motorReq[motorIndex] )
-			{
-				// increasing motor value
-				if( motorReq[motorIndex] > motorTmp )
+				// Do we need to change the motor value ?
+				if( motorTmp != motorReq[motorIndex] )
 				{
-					motorTmp += motorSlew[motorIndex];
-					// limit
-					if( motorTmp > motorReq[motorIndex] )
-						motorTmp = motorReq[motorIndex];
-				}
+					// increasing motor value
+					if( motorReq[motorIndex] > motorTmp )
+					{
+						motorTmp += motorSlew[motorIndex];
+						// limit
+						if( motorTmp > motorReq[motorIndex] )
+							motorTmp = motorReq[motorIndex];
+					}
 
-				// decreasing motor value
-				if( motorReq[motorIndex] < motorTmp )
-				{
-					motorTmp -= motorSlew[motorIndex];
-					// limit
-					if( motorTmp < motorReq[motorIndex] )
-						motorTmp = motorReq[motorIndex];
-				}
+					// decreasing motor value
+					if( motorReq[motorIndex] < motorTmp )
+					{
+						motorTmp -= motorSlew[motorIndex];
+						// limit
+						if( motorTmp < motorReq[motorIndex] )
+							motorTmp = motorReq[motorIndex];
+					}
 
-				// finally set motor
-				motor[motorIndex] = motorTmp;
+					// finally set motor
+					motor[motorIndex] = motorTmp;
+				}
 			}
 		}
 

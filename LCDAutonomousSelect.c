@@ -10,10 +10,10 @@ int selectAutonomous()
 	int autonColor = 1, autonTile = 1, autonLevel = 1;
 	string autonColorString, autonTileString, autonLevelString;
 
-	sprintf(specifier, "Clr, Tl, Lvl");
-	sprintf(autonColorString, "Red");
-	sprintf(autonTileString, "Left");
-	sprintf(autonLevelString, "Pri");
+	sprintf(specifier, "Side, Back1,Back2");
+	sprintf(autonColorString, "Left");
+	sprintf(autonTileString, "False");
+	sprintf(autonLevelString, "True");
 
 	timer t;
 	timer_Initialize(&t);
@@ -24,7 +24,7 @@ int selectAutonomous()
 		if (nLCDButtons & kButtonLeft)
 		{
 			autonColor = autonColor == 1 ? 2 : 1;
-			autonColorString = autonColor == 1 ? "Red" : "Blue";
+			autonColorString = autonColor == 1 ? "Left" : "Right";
 			waitForLCDRelease();
 		}
 
@@ -32,7 +32,7 @@ int selectAutonomous()
 		if (nLCDButtons & kButtonCenter)
 		{
 			autonTile = autonTile == 1 ? 2 : 1;
-			autonTileString = autonTile == 1 ? "Left" : "Right";
+			autonTileString = autonTile == 1 ? "False" : "True";
 			waitForLCDRelease();
 		}
 
@@ -52,20 +52,9 @@ int selectAutonomous()
 			}
 			timer_ClearHardMarker(&t);
 
-			autonLevel = autonLevel + 1 > 3 ? 1 : autonLevel + 1;
 
-			if (autonLevel == 1)
-			{
-				autonLevelString = "Pri";
-			}
-			else if (autonLevel == 2)
-			{
-				autonLevelString = "Sec";
-			}
-			else
-			{
-				autonLevelString = "Ter";
-			}
+			autonLevel = autonLevel == 1 ? 2 : 1;
+			autonLevelString = autonLevel == 1 ? "True" : "False";
 
 			waitForLCDRelease();
 		}
@@ -78,6 +67,7 @@ int selectAutonomous()
 		wait1Msec(25);
 	}
 }
+
 
 //LCD Library callback function
 void lcd_invoke(int func)

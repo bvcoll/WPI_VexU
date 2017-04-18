@@ -377,3 +377,11 @@ void driver90Turns(){  //Automatic 90 turns for the driver
 	//Record the state of the button for the next loop
 	turn90Debounce = vexRT[ Btn8L ] || vexRT[ Btn8R ];
 }
+
+void driveWallTime(int time, int power = -100){
+	motor[LD1] = motor[LD2] = motor[LD3] = power;
+	motor[RD1] = motor[RD2] = motor[RD3] = power;
+	delay(time);
+	motor[LD1] = motor[LD2] = motor[LD3] = 0;
+	motor[RD1] = motor[RD2] = motor[RD3] = 0;
+}

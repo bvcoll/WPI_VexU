@@ -2,20 +2,18 @@ void scoreCenterCube(int dir, bool comeBack = true){
 	//drive to get cube
 	driveDistance(26);
 	turnAngle(90*dir);
-	driveWall(1500);
+	delay(250);
+	driveWallTime(1500);
 
 	driveDistance(46);  //OLD 44
 	if(!goingBack){
 		armTask_ArmState = ARM_HOLDING;
 		if(comeBack){
-			driveDistance(-42);
+			driveDistance(-38); //OLD -42
 			} else {
 			driveDistance(42);
 		}
-
-
 		turnAngle(-90*dir);
-
 		//back into fence to dump
 		wallThenDump(1250);
 		} else {
@@ -44,7 +42,7 @@ void auton(bool isLeft, bool comeBack = false, bool cubeComeBack = true){
 		turnAngle(4*dir);
 		driveDistance(-86);
 		turnAngle(90*dir);
-		wallThenDump(2500,true);
+		wallThenDump(3500,true);
 
 		scoreCenterCube(-dir,cubeComeBack);
 
@@ -56,7 +54,7 @@ void auton(bool isLeft, bool comeBack = false, bool cubeComeBack = true){
 
 		//Back up and score
 		driveDistance(-24);
-		wallThenDump(1500,true);
+		wallThenDump(3500,true);
 
 		scoreCenterCube(dir,cubeComeBack);
 	}

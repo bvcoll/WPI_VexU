@@ -27,17 +27,13 @@ task ArmClawController()
 	while(true)
 	{
 
-		if (SensorValue(armTopLimit) == 1) {
-			armTask_ArmState = ARM_RESET;
-		}
-
 		switch(armTask_ArmState) {
 
 		case ARM_USER:
 
 			userClaw();
 			userArm();
-
+			//setArm(30);
 			break;
 
 		case ARM_HOLDING:
@@ -78,15 +74,6 @@ task ArmClawController()
 				holding = true;
 				armTask_ArmState = ARM_USER;
 			}
-			break;
-
-		case ARM_DEPLOY:
-			openClaw();
-			setArm(75);
-			delay(250);
-			setArm(0);
-			delay(250);
-			armTask_ArmState = ARM_RESET;
 			break;
 
 
