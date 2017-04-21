@@ -57,17 +57,25 @@ int    ctl_v;
 int    ctl_h;
 int    drive_l;
 int    drive_r;
-
+int    driveDir;
 void ArcadeDrive()
 {
 	// Get joystick H and V control
 	ctl_v = vexRT[ JOY_DRIVE_V ];
 
+	//RAW INPUT
+	//ctl_h = vexRT[ JOY_DRIVE_H ];
+
+	//SQUARED INPUT
+	driveDir = vexRT[ JOY_DRIVE_H ] > 0 ? 1 : -1;
+	ctl_h = (vexRT[ JOY_DRIVE_H ]*vexRT[ JOY_DRIVE_H ])/127 * driveDir;
+
+	//CUBED INPUT
+	//ctl_h = ((vexRT[ JOY_DRIVE_H ]*vexRT[ JOY_DRIVE_H ]*vexRT[ JOY_DRIVE_H ])/16129)/2;
+
 	if(vexRT[Btn5U]){
-		ctl_h = vexRT[ JOY_DRIVE_H ]/2;
-		} else {
-		ctl_h = vexRT[ JOY_DRIVE_H ];
-	}
+		ctl_h = ctl_h /2;
+		}
 
 	// Ignore joystick near center
 	if( (abs(ctl_v) <= JOYSTICK_THRESHOLD) && (abs(ctl_h) <= JOYSTICK_THRESHOLD) )
@@ -156,7 +164,7 @@ task autoStallDetection(){
 		//When derivative error is less than certain value begin latching
 		//If latched for more than certain time set hitWall to true
 		if(abs(distderivative_Stall) < 0.2 && abs(motor(LD1)) > 50 && lastDrive - 5 < motor(LD1) && lastDrive + 5 > motor(LD1)){
-			driveStalled =  nPgmTime - lastLatched_Drive > 5000;
+			driveStalled =  nPgmTime - lastLatched_Drive > 4000;  //OLD 5000
 			} else {
 			lastLatched_Drive = nPgmTime;
 			driveStalled = false;

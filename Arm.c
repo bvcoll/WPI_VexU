@@ -25,7 +25,7 @@ void initArmPID(){
 
 void setArm(int voltage){
 	motor(A1) = motor(A2) = motor(A3) = motor(A4) = voltage;
-	//motor(A4) = voltage;
+	//motor(A3) = voltage;
 }
 
 void pidArm(int armSetpoint) {

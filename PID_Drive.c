@@ -159,9 +159,9 @@ task PID_Drive(){
 
 			//If close to range apply negative voltage to stop robot
 			if(abs(disterror)<driveErrorThreshold){
-				motor[LD1] = motor[LD2] = motor[LD3] = (15 * -direction);
-				motor[RD1] = motor[RD2] = motor[RD3] = (15 * -direction);
-				wait1Msec(100);
+				motor[LD1] = motor[LD2] = motor[LD3] = (25 * -direction); //OLD 15
+				motor[RD1] = motor[RD2] = motor[RD3] = (25 * -direction);
+				wait1Msec(20); //OLD 100
 				if(abs(distderivative) < 0.5){ //Once you stop moving reset
 					isDriving = false;
 					linearDistance = 0;
@@ -227,8 +227,8 @@ task PID_Drive(){
 
 			//If close to range apply negative voltage to stop robot
 			if(abs(disterror)<turnErrorThreshold){
-				autoTurn(15 * -direction);
-				wait1Msec(100);
+				//autoTurn(20 * -direction); //OLD 15
+				wait1Msec(5); //OLD 100
 				if(abs(distderivative) < 0.5){ //Once you stop moving reset
 					isTurning = false;
 					turnAng = 0;
@@ -255,11 +255,11 @@ task PID_Drive(){
 
 			//When derivative error is less than certain value begin latching
 			//If latched for more than certain time set hitWall to true
-			if(abs(distderivative) > 0.2){
+			if(abs(distderivative) > 0.25){ //0.2
 				lastLatched = nPgmTime;
 				hitWall = false;
 				} else {
-				hitWall =  nPgmTime - lastLatched > 250; //OLD 500
+				hitWall =  nPgmTime - lastLatched > 375; //OLD 250
 			}
 
 			//If hitWall and beginning time has passed stop motors and reset
@@ -384,4 +384,18 @@ void driveWallTime(int time, int power = -100){
 	delay(time);
 	motor[LD1] = motor[LD2] = motor[LD3] = 0;
 	motor[RD1] = motor[RD2] = motor[RD3] = 0;
+}
+
+void wallThenDumpTime(int time,bool high = false){
+
+	if(high){
+		armTask_ArmState = ARM_HIGH_HOLDING;
+		} else {
+		armTask_ArmState = ARM_HOLDING;
+	}
+	delay(250);
+	driveWallTime(time);
+	armTask_ArmState = ARM_DUMPING;
+	delay(1500);
+
 }

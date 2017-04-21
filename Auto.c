@@ -15,12 +15,36 @@ void scoreCenterCube(int dir, bool comeBack = true){
 		}
 		turnAngle(-90*dir);
 		//back into fence to dump
-		wallThenDump(1250);
+		delay(250);
+		wallThenDumpTime(1500);
 		} else {
 		driveDistance(12);
 		turnAngle(-90 * dir);
-		wallThenDump(1250);
+		wallThenDumpTime(1500);
 	}
+}
+
+void pickUpFromMiddle(int dir, int angle = 20, int distance = 50){
+
+	//drive and back into wall
+	driveDistance(26);
+	turnAngle(90*dir);
+	delay(250);
+	driveWallTime(1500);
+
+	//drive to pick up objects
+	driveDistance(12);
+	turnAngle(angle*-dir);
+	driveDistance(distance);
+
+	//lift and back up
+	armTask_ArmState = ARM_HOLDING;
+	delay(250);
+	driveDistance(-distance);
+	turnAngle(-90*dir + dir*angle);
+
+	//back into fence to dump
+	wallThenDumpTime(1500);
 }
 
 void auton(bool isLeft, bool comeBack = false, bool cubeComeBack = true){
@@ -28,12 +52,12 @@ void auton(bool isLeft, bool comeBack = false, bool cubeComeBack = true){
 	int dir = 2 * isLeft - 1;
 
 	//Back up to deploy
-	driveDistance(-12);
+	driveDistance(-14);
 	openClaw();
 	wait1Msec(1500);
 
 	//Collect row
-	driveDistance(88);
+	driveDistance(90);
 
 	//Grab and turn
 	wait1Msec(1000);
@@ -46,6 +70,14 @@ void auton(bool isLeft, bool comeBack = false, bool cubeComeBack = true){
 
 		scoreCenterCube(-dir,cubeComeBack);
 
+		if(!cubeComeBack){
+			dir *= -1;
+		}
+
+		pickUpFromMiddle(-dir,auto_angle1,auto_distance1);
+		//pickUpFromMiddle(-dir,auto_angle2,auto_distance2);
+		//pickUpFromMiddle(-dir,auto_angle3,auto_distance3);
+
 
 		} else {
 		armTask_ArmState = ARM_HIGH_HOLDING;
@@ -57,6 +89,14 @@ void auton(bool isLeft, bool comeBack = false, bool cubeComeBack = true){
 		wallThenDump(3500,true);
 
 		scoreCenterCube(dir,cubeComeBack);
+
+		if(!cubeComeBack){
+			dir *= -1;
+		}
+
+		pickUpFromMiddle(dir,auto_angle1,auto_distance1);
+		//pickUpFromMiddle(dir,auto_angle2,auto_distance2);
+		//pickUpFromMiddle(dir,auto_angle3,auto_distance3);
 	}
 
 

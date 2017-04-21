@@ -48,10 +48,20 @@ int middleArmSetpoint = 1200; //Setpoint to hold at for driving around the field
 int highHoldingArmSetpoint = 1500;
 int topArmSetpoint = 3000; //3000 //Setpoint for dumping
 int scoreThreshold = topArmSetpoint - 1250; //minus 1500 //Point at which to open the claw
-//TODO: Actually tune these
+//TODO: Actually tune these more
 int centerFenceKnockingSetpoint = 1900;
 int hangingSetpoint = 3100;
 
+
+////////////////////////////
+//  VALUES FOR AUTO RUNS  //
+////////////////////////////
+int auto_angle1 = 20;
+int auto_distance1 = 50;
+int auto_angle2 = 0;
+int auto_distance2 = 50;
+int auto_angle3 = 10;
+int auto_distance3 = 50;
 
 
 //LCD Chooser Defines
@@ -264,6 +274,15 @@ int distanceToDrive = 48;
 float leftEncoderValue, rightEncoderValue, pot, gyro, avgEncoderValue;
 task usercontrol()
 {
+/*
+	//FOR TESTING AUTO
+	startTask(PID_Drive);
+	initPID();
+	isTurning = false;
+	isDriving = false;
+	isWall = false;
+*/
+
 	//stopTask(autoStallDetection);
 	// Start motor slew rate control
 	initDriveSlew();
@@ -293,18 +312,21 @@ task usercontrol()
 		gyro = getGyro();
 		pot = SensorValue(armPot);
 
-		//userArm();
 
 
-		/*User drive method*/
+		/*			User drive method				*/
 		arcadeDrive();
 		//basicArcadeDrive();
 
 
-		/*                        Skills Buttons                    */
+		/*User 90 degree turns*/
+		//driver90Turns();
+
+
+		/*				Skills Buttons 			*/
 		/*
 		if(vexRT(Btn5U)){
-		//arcadeDrive();
+		//basicArcadeDrive();
 		}
 
 		//Buttons to start skills
@@ -324,15 +346,14 @@ task usercontrol()
 		}
 		*/
 
-		/*User 90 degree turns*/
-		//driver90Turns();
-
 		/*User state changes*/
 		if (vexRT(Btn7R)) {
 			armTask_ArmState = ARM_FENCE_KNOCKING;
 		}
 		if (vexRT(Btn7L)) {
 			armTask_ArmState = ARM_CLIMBING_SETUP;
+			//turnAngle(90);
+		  //driveDistance(24);
 		}
 		if (vexRT(Btn5D) || vexRT(Btn7U)|| vexRT(Btn7D)) {
 			armTask_ArmState = ARM_USER;
