@@ -56,8 +56,12 @@ int hangingSetpoint = 3100;
 ////////////////////////////
 //  VALUES FOR AUTO RUNS  //
 ////////////////////////////
-int auto_angle1 = 20;
-int auto_distance1 = 50;
+
+//for back dumpers (20,50)
+int auto_angle1 = -17;
+int auto_distance1 = 45;
+int auto_frontDistance = 30;
+
 int auto_angle2 = 0;
 int auto_distance2 = 50;
 int auto_angle3 = 10;
@@ -225,6 +229,7 @@ task autonomous()
 	isDriving = false;
 	isWall = false;
 
+	//programmingSkills();
 	startAutonomous();
 
 	//scoreCenterCube(1,false);

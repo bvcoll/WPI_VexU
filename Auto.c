@@ -47,6 +47,16 @@ void pickUpFromMiddle(int dir, int angle = 20, int distance = 50){
 	wallThenDumpTime(1500);
 }
 
+void pickUpFromFront(int driveForward = 30){
+	delay(500);
+	driveDistance(driveForward);
+	delay(100);
+	armTask_ArmState = ARM_HOLDING;
+	delay(250);
+	wallThenDumpTime(1500);
+
+}
+
 void auton(bool isLeft, bool comeBack = false, bool cubeComeBack = true){
 	// 1 for red, -1 for blue
 	int dir = 2 * isLeft - 1;
@@ -75,6 +85,7 @@ void auton(bool isLeft, bool comeBack = false, bool cubeComeBack = true){
 		}
 
 		pickUpFromMiddle(-dir,auto_angle1,auto_distance1);
+		pickUpFromFront(auto_frontDistance);
 		//pickUpFromMiddle(-dir,auto_angle2,auto_distance2);
 		//pickUpFromMiddle(-dir,auto_angle3,auto_distance3);
 
@@ -95,6 +106,7 @@ void auton(bool isLeft, bool comeBack = false, bool cubeComeBack = true){
 		}
 
 		pickUpFromMiddle(dir,auto_angle1,auto_distance1);
+		pickUpFromFront(auto_frontDistance);
 		//pickUpFromMiddle(dir,auto_angle2,auto_distance2);
 		//pickUpFromMiddle(dir,auto_angle3,auto_distance3);
 	}
