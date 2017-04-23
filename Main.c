@@ -279,14 +279,14 @@ int distanceToDrive = 48;
 float leftEncoderValue, rightEncoderValue, pot, gyro, avgEncoderValue;
 task usercontrol()
 {
-/*
+
 	//FOR TESTING AUTO
 	startTask(PID_Drive);
 	initPID();
 	isTurning = false;
 	isDriving = false;
 	isWall = false;
-*/
+
 
 	//stopTask(autoStallDetection);
 	// Start motor slew rate control
@@ -325,31 +325,10 @@ task usercontrol()
 
 
 		/*User 90 degree turns*/
-		//driver90Turns();
+		driver90Turns();
 
 
-		/*				Skills Buttons 			*/
-		/*
-		if(vexRT(Btn5U)){
-		//basicArcadeDrive();
-		}
 
-		//Buttons to start skills
-		if(vexRT(Btn8L) && !lastBegan){
-		programmingSkills();
-		//driveWall(1000);
-		}
-		lastBegan = vexRT(Btn8L);
-
-
-		//Reset encoders and stop all drive loops
-		if(vexRT(Btn8L)){
-		resetEncoders();
-		isTurning = false;
-		isDriving = false;
-		isWall = false;
-		}
-		*/
 
 		/*User state changes*/
 		if (vexRT(Btn7R)) {

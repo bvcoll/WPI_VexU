@@ -85,7 +85,11 @@ void auton(bool isLeft, bool comeBack = false, bool cubeComeBack = true){
 		}
 
 		pickUpFromMiddle(-dir,auto_angle1,auto_distance1);
-		pickUpFromFront(auto_frontDistance);
+
+
+		//pickUpFromFront(auto_frontDistance);
+
+
 		//pickUpFromMiddle(-dir,auto_angle2,auto_distance2);
 		//pickUpFromMiddle(-dir,auto_angle3,auto_distance3);
 
@@ -106,7 +110,11 @@ void auton(bool isLeft, bool comeBack = false, bool cubeComeBack = true){
 		}
 
 		pickUpFromMiddle(dir,auto_angle1,auto_distance1);
-		pickUpFromFront(auto_frontDistance);
+
+
+		//pickUpFromFront(auto_frontDistance);
+
+
 		//pickUpFromMiddle(dir,auto_angle2,auto_distance2);
 		//pickUpFromMiddle(dir,auto_angle3,auto_distance3);
 	}
